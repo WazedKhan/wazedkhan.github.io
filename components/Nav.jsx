@@ -10,8 +10,8 @@ function Nav({ theme, onToggleTheme }) {
   const links = [
     ["01", "Work", "#work"],
     ["02", "About", "#about"],
-    ["03", "Services", "#services"],
-    ["04", "Writing", "#writing"],
+    ["03", "Skills", "#services"],
+    ["04", "Repos", "#writing"],
     ["05", "Now", "#now"],
     ["06", "Contact", "#contact"],
   ];
@@ -20,7 +20,7 @@ function Nav({ theme, onToggleTheme }) {
     <nav className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
       <a href="#home" className="nav-mark">
         <span className="nav-mark-box">AWK</span>
-        <span className="nav-mark-name">/ Abdul Wajed Khan</span>
+        <span className="nav-mark-name">/ Backend · Softwrd Ltd</span>
       </a>
       <ul className="nav-links">
         {links.map(([n, label, href]) => (
