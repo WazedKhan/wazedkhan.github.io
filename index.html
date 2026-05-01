@@ -137,57 +137,47 @@
 
   <script>
   (async () => {
-    const WEBHOOK_URL = "__DISCORD_WEBHOOK_URL__";
-
-    // Device detection
-    const ua = navigator.userAgent;
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
-    const deviceType = isMobile ? "📱 Mobile" : "🖥️ Desktop";
-
-    // Time greeting
-    const hour = new Date().getHours();
-    const greeting = hour < 12 ? "🌅 Morning visit" : hour < 17 ? "☀️ Afternoon visit" : "🌙 Evening visit";
+    const WEBHOOK_URL =  "__DISCORD_WEBHOOK_URL__";
 
     const info = {
       time: new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
+      page: location.href,
       referrer: document.referrer || "Direct / None",
+      browser: navigator.userAgent,
       screen: `${screen.width}x${screen.height}`,
       language: navigator.language,
     };
 
-    let city = "Unknown", region = "Unknown", country = "Unknown", ip = "Unknown";
+    // Optional: get approximate location via free IP API (no key needed)
+    let location_info = "Unknown";
     try {
       const geo = await fetch("https://ipinfo.io/json").then(r => r.json());
-      city = geo.city || "Unknown";
-      region = geo.region || "Unknown";
-      country = geo.country || "Unknown";
-      ip = geo.ip || "Unknown";
+      location_info = `${geo.city}, ${geo.region}, ${geo.country} (${geo.ip})`;
     } catch (_) {}
 
     await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: "Portfolio Spy 👁️",
+        username: "Visitor Alter 😀",
         avatar_url: "https://wazedkhan.github.io/favicon.ico",
         embeds: [{
-          title: `🚀 Someone just checked out your portfolio!`,
-          description: `> ${greeting} from **${city}, ${region}** — ${deviceType}`,
+          title: "🧑‍💻 New Portfolio Visit!",
           color: 0x5865F2,
           fields: [
-            { name: "📍 Location", value: `${city}, ${region}, ${country}\n\`${ip}\``, inline: true },
-            { name: "🖥️ Device", value: `${deviceType}\n\`${screen.width}x${screen.height}\``, inline: true },
-            { name: "🔗 Referrer", value: info.referrer, inline: false },
-            { name: "🌐 Language", value: info.language, inline: true },
             { name: "🕐 Time (BD)", value: info.time, inline: true },
+            { name: "📍 Location", value: location_info, inline: true },
+            { name: "🔗 Referrer", value: info.referrer, inline: false },
+            { name: "🖥️ Screen", value: info.screen, inline: true },
+            { name: "🌐 Language", value: info.language, inline: true },
+            { name: "📡 User Agent", value: `\`\`\`${info.browser}\`\`\``, inline: false },
           ],
-          footer: { text: "wazedkhan.github.io • Portfolio Tracker" },
+          footer: { text: "wazedkhan.github.io" },
           timestamp: new Date().toISOString(),
         }]
       })
     });
   })();
-</script>
 </script>
 </body>
 </html>
