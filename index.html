@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-accent="indigo" data-direction="editorial" data-display="instrument" data-density="airy" data-grain="off">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Abdul Wajed Khan — Backend engineer at Softwrd Limited (PropCloud → Placepoint). Previously acting tech lead on HealthOS at Repliq Limited. Grain Marketplace, ORPS. Go, GraphQL, MongoDB, Python. Dhaka." />
+  <title>Abdul Wajed Khan — Backend Engineer · Softwrd Limited</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="components/Cursor.jsx"></script>
+  <script type="text/babel" src="components/Nav.jsx"></script>
+  <script type="text/babel" src="components/Hero.jsx"></script>
+  <script type="text/babel" src="components/SelectedWork.jsx"></script>
+  <script type="text/babel" src="components/ProjectDetail.jsx"></script>
+  <script type="text/babel" src="components/Sections.jsx"></script>
+  <script type="text/babel" src="components/Tweaks.jsx"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // Persisted tweakable defaults
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "direction": "editorial",
+      "accent": "indigo",
+      "displayFont": "instrument",
+      "density": "airy",
+      "grain": false,
+      "theme": "dark"
+    }/*EDITMODE-END*/;
+
+    function App() {
+      const [theme, setTheme] = React.useState(() => localStorage.getItem("theme") || TWEAK_DEFAULTS.theme);
+      const [activeProject, setActiveProject] = React.useState(null);
+      const [tweaks, setTweaks] = React.useState(TWEAK_DEFAULTS);
+      const [tweaksOpen, setTweaksOpen] = React.useState(false);
+
+      // Apply theme to html
+      React.useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+      }, [theme]);
+
+      // Apply tweaks to html
+      React.useEffect(() => {
+        const d = document.documentElement;
+        d.setAttribute("data-accent", tweaks.accent);
+        d.setAttribute("data-direction", tweaks.direction);
+        d.setAttribute("data-display", tweaks.displayFont);
+        d.setAttribute("data-density", tweaks.density);
+        d.setAttribute("data-grain", tweaks.grain ? "on" : "off");
+      }, [tweaks]);
+
+      // Tweaks postMessage protocol
+      React.useEffect(() => {
+        const onMessage = (e) => {
+          if (!e.data) return;
+          if (e.data.type === "__activate_edit_mode") setTweaksOpen(true);
+          if (e.data.type === "__deactivate_edit_mode") setTweaksOpen(false);
+        };
+        window.addEventListener("message", onMessage);
+        window.parent.postMessage({ type: "__edit_mode_available" }, "*");
+        return () => window.removeEventListener("message", onMessage);
+      }, []);
+
+      // Persist tweak changes to file
+      const updateTweaks = React.useCallback((updater) => {
+        setTweaks((prev) => {
+          const next = typeof updater === "function" ? updater(prev) : updater;
+          const diff = {};
+          for (const k of Object.keys(next)) if (next[k] !== prev[k]) diff[k] = next[k];
+          if (Object.keys(diff).length) {
+            window.parent.postMessage({ type: "__edit_mode_set_keys", edits: diff }, "*");
+          }
+          return next;
+        });
+      }, []);
+
+      // Reveal-on-scroll
+      React.useEffect(() => {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const ent of entries) {
+              if (ent.isIntersecting) ent.target.classList.add("in");
+            }
+          },
+          { threshold: 0.1, rootMargin: "-60px 0px" }
+        );
+        document.querySelectorAll(".section, .hero-meta").forEach((el) => {
+          el.classList.add("reveal");
+          io.observe(el);
+        });
+        return () => io.disconnect();
+      }, []);
+
+      return (
+        <>
+          <Cursor />
+          <Nav theme={theme} onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />
+          <main>
+            <Hero />
+            <SelectedWork onOpen={setActiveProject} />
+            <About />
+            <Services />
+            <Writing />
+            <Now />
+            <Testimonials />
+            <Press />
+            <Resume />
+            <Contact />
+          </main>
+          <ProjectDetail project={activeProject} onClose={() => setActiveProject(null)} />
+          <Tweaks
+            state={tweaks}
+            setState={updateTweaks}
+            open={tweaksOpen}
+            onClose={() => {
+              setTweaksOpen(false);
+              window.parent.postMessage({ type: "__edit_mode_deactivated" }, "*");
+            }}
+          />
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+
+  <script>
+  (async () => {
+    const WEBHOOK_URL =  "https://discord.com/api/webhooks/1499617159268274257/XakxDV5u6c6sn3FG7bM6ZilCL42Kj5mao-rtS27cDlaYruLSOh7PGj4aU2817dTHFwdJ";
+
+    const info = {
+      time: new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
+      page: location.href,
+      referrer: document.referrer || "Direct / None",
+      browser: navigator.userAgent,
+      screen: `${screen.width}x${screen.height}`,
+      language: navigator.language,
+    };
+
+    // Optional: get approximate location via free IP API (no key needed)
+    let location_info = "Unknown";
+    try {
+      const geo = await fetch("https://ipapi.co/json/").then(r => r.json());
+      location_info = `${geo.city}, ${geo.country_name} (${geo.ip})`;
+    } catch (_) {}
+
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: "Portfolio Spy 👁️",
+        avatar_url: "https://wazedkhan.github.io/favicon.ico",
+        embeds: [{
+          title: "🧑‍💻 New Portfolio Visit!",
+          color: 0x5865F2,
+          fields: [
+            { name: "🕐 Time (BD)", value: info.time, inline: true },
+            { name: "📍 Location", value: location_info, inline: true },
+            { name: "🔗 Referrer", value: info.referrer, inline: false },
+            { name: "🖥️ Screen", value: info.screen, inline: true },
+            { name: "🌐 Language", value: info.language, inline: true },
+            { name: "📡 User Agent", value: `\`\`\`${info.browser}\`\`\``, inline: false },
+          ],
+          footer: { text: "wazedkhan.github.io" },
+          timestamp: new Date().toISOString(),
+        }]
+      })
+    });
+  })();
+</script>
+</body>
+</html>
