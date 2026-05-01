@@ -34,10 +34,12 @@ function Hero() {
         <span>BACKEND ENGINEER · SOFWRD LTD</span>
         <span className="hero-status-sep">/</span>
         <span>DHAKA, BD · UTC+6</span>
+        <span className="hero-status-sep">/</span>
+        <span style={{ color: "var(--accent)" }}>OPEN TO RELOCATION · REMOTE</span>
       </div>
 
       <h1 className="hero-title">
-        <span className="hero-eyebrow">— Python, Django &amp; Go</span>
+        <span className="hero-eyebrow">— Python, Django &amp; Go · 3+ years production</span>
         <span className="hero-line-1">
           <em>Microservices</em> that ship,
         </span>
@@ -59,8 +61,8 @@ function Hero() {
           <div className="mono">{githubYears()}</div>
         </div>
         <div className="hero-meta-col">
-          <div className="label">Focus</div>
-          <div className="mono">Placepoint · Go · Federation · MongoDB · AWS</div>
+          <div className="label">Core impact</div>
+          <div className="mono">93% API speedup · 2 PyPI packages · 7-person tech lead</div>
         </div>
       </div>
 

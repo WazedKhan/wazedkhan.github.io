@@ -10,10 +10,12 @@ function Nav({ theme, onToggleTheme }) {
   const links = [
     ["01", "Work", "#work"],
     ["02", "About", "#about"],
-    ["03", "Skills", "#services"],
-    ["04", "Repos", "#writing"],
-    ["05", "Now", "#now"],
-    ["06", "Contact", "#contact"],
+    ["03", "Impact", "#impact"],
+    ["04", "Skills", "#services"],
+    ["05", "OSS", "#opensource"],
+    ["06", "Writing", "#writing"],
+    ["07", "Now", "#now"],
+    ["08", "Contact", "#contact"],
   ];
 
   return (
