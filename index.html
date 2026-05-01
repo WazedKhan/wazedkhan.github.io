@@ -151,15 +151,15 @@
     // Optional: get approximate location via free IP API (no key needed)
     let location_info = "Unknown";
     try {
-      const geo = await fetch("https://ipapi.co/json/").then(r => r.json());
-      location_info = `${geo.city}, ${geo.country_name} (${geo.ip})`;
+      const geo = await fetch("https://freeipapi.com/api/json").then(r => r.json());
+      location_info = `${geo.cityName}, ${geo.regionName}, ${geo.countryName} (${geo.ipAddress})`;
     } catch (_) {}
 
     await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: "Portfolio Spy 👁️",
+        username: "Visitor Alter 😀",
         avatar_url: "https://wazedkhan.github.io/favicon.ico",
         embeds: [{
           title: "🧑‍💻 New Portfolio Visit!",
