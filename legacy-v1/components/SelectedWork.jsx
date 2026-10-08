@@ -284,13 +284,13 @@ function SelectedWork({ onOpen }) {
   return (
     <section className="section" id="work" data-screen-label="02 Work">
       <div className="section-head">
-        <span className="section-num">01</span>
+        <span className="section-num slide-in-left">01</span>
         <span className="section-label">Selected Work</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
         <span className="section-count mono">{filtered.length.toString().padStart(2, "0")} entries</span>
       </div>
 
-      <h2 className="section-title">
+      <h2 className="section-title blur-in">
         Employer work, <em>client delivery,</em> and open repos.
       </h2>
 
@@ -307,11 +307,11 @@ function SelectedWork({ onOpen }) {
         ))}
       </div>
 
-      <div className="work-list" ref={listRef} onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+      <div className="work-list stagger-children" ref={listRef} onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
         {filtered.map((p, i) => (
           <button
             key={p.id}
-            className="work-row"
+            className="work-row scale-in"
             onMouseEnter={() => setHover(p)}
             onClick={() => onOpen(p)}
           >

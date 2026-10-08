@@ -3,14 +3,14 @@ function About() {
   return (
     <section className="section" id="about" data-screen-label="03 About">
       <div className="section-head">
-        <span className="section-num">02</span>
+        <span className="section-num slide-in-left">02</span>
         <span className="section-label">About</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
       </div>
 
       <div className="about-grid">
         <div className="about-col">
-          <p className="about-lead">
+          <p className="about-lead blur-in">
             Backend engineer with <em>3+ years</em> shipping web backends — mostly Python and Django — now deep in <em>Go</em>, microservices, and distributed systems.
           </p>
           <p>
@@ -37,7 +37,7 @@ function About() {
           </p>
         </div>
 
-        <div className="about-aside">
+        <div className="about-aside stagger-children">
           <div className="about-meta">
             <div className="label">Based in</div>
             <div>Dhaka, Bangladesh</div>
@@ -102,18 +102,18 @@ function ImpactMetrics() {
   return (
     <section className="section" id="impact" data-screen-label="04 Impact">
       <div className="section-head">
-        <span className="section-num">03</span>
+        <span className="section-num slide-in-left">03</span>
         <span className="section-label">Production impact</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
       </div>
 
-      <h2 className="section-title" style={{ marginBottom: "36px" }}>
+      <h2 className="section-title blur-in" style={{ marginBottom: "36px" }}>
         Real systems, <em>measurable outcomes.</em>
       </h2>
 
-      <div className="stats-grid">
+      <div className="stats-grid stagger-children">
         {stats.map((s) => (
-          <div key={s.label} className="stat-card">
+          <div key={s.label} className="stat-card scale-in">
             <div className="stat-card-n">{s.n}</div>
             <div className="stat-card-label mono">{s.label}</div>
             <p className="stat-card-note">{s.note}</p>
@@ -121,7 +121,7 @@ function ImpactMetrics() {
         ))}
       </div>
 
-      <div className="case-study">
+      <div className="case-study scale-in">
         <h3 className="case-study-head mono">Case study · Race condition in financial workflows</h3>
         <div className="case-study-grid">
           <div className="case-step">
@@ -179,14 +179,14 @@ function Services() {
   return (
     <section className="section" id="services" data-screen-label="05 Services">
       <div className="section-head">
-        <span className="section-num">04</span>
+        <span className="section-num slide-in-left">04</span>
         <span className="section-label">What I ship</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
       </div>
 
-      <div className="services-grid">
+      <div className="services-grid stagger-children">
         {items.map((it) => (
-          <div key={it.n} className="service">
+          <div key={it.n} className="service scale-in">
             <div className="service-head">
               <span className="service-n mono">{it.n}</span>
               <h3 className="service-title">{it.title}</h3>
@@ -255,18 +255,18 @@ function OpenSource() {
   return (
     <section className="section" id="opensource" data-screen-label="06 Open source">
       <div className="section-head">
-        <span className="section-num">05</span>
+        <span className="section-num slide-in-left">05</span>
         <span className="section-label">Open source</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
       </div>
 
-      <h2 className="section-title" style={{ marginBottom: "36px" }}>
+      <h2 className="section-title blur-in" style={{ marginBottom: "36px" }}>
         Published packages — <em>solving real developer pain.</em>
       </h2>
 
-      <div className="oss-list">
+      <div className="oss-list stagger-children">
         {packages.map((pkg) => (
-          <article key={pkg.name} className="oss-card">
+          <article key={pkg.name} className="oss-card scale-in">
             <div className="oss-card-head">
               <h3 className="oss-name">{pkg.name}</h3>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -342,15 +342,15 @@ function Now() {
   return (
     <section className="section" id="now" data-screen-label="08 Now">
       <div className="section-head">
-        <span className="section-num">07</span>
+        <span className="section-num slide-in-left">07</span>
         <span className="section-label">Now</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
         <span className="section-count mono">Updated 24 Apr 2026</span>
       </div>
 
-      <div className="now-list">
+      <div className="now-list stagger-children">
         {items.map(([k, v]) => (
-          <div key={k} className="now-row">
+          <div key={k} className="now-row scale-in">
             <div className="now-k mono">{k}</div>
             <div className="now-v">{v}</div>
           </div>
@@ -458,7 +458,7 @@ function Writing() {
   ];
 
   const row = (p) => (
-    <a key={`${p.n}-${p.href}`} href={p.href} className="writing-row" target="_blank" rel="noreferrer">
+    <a key={`${p.n}-${p.href}`} href={p.href} className="writing-row scale-in" target="_blank" rel="noreferrer">
       <span className="mono dim">{p.n}</span>
       <span className="writing-title">{p.title}</span>
       <span className="mono dim">{p.tag}</span>
@@ -472,24 +472,24 @@ function Writing() {
   return (
     <section className="section" id="writing" data-screen-label="07 Code & writing">
       <div className="section-head">
-        <span className="section-num">06</span>
+        <span className="section-num slide-in-left">06</span>
         <span className="section-label">Code & writing</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
       </div>
 
-      <h2 className="section-title" style={{ marginBottom: "36px" }}>
+      <h2 className="section-title blur-in" style={{ marginBottom: "36px" }}>
         Public code, published packages &amp; <em>technical writing.</em>
       </h2>
 
       <div className="label" style={{ marginBottom: "12px" }}>Medium articles</div>
-      <div className="writing-list">
+      <div className="writing-list stagger-children">
         {articles.map(row)}
       </div>
 
       <div style={{ padding: "20px 0 12px", borderTop: "1px solid var(--line)" }} className="label">
         Repositories &amp; live products
       </div>
-      <div className="writing-list">
+      <div className="writing-list stagger-children">
         {repos.map(row)}
       </div>
     </section>
@@ -518,14 +518,14 @@ function Testimonials() {
   return (
     <section className="section" id="testimonials" data-screen-label="09 Snapshot">
       <div className="section-head">
-        <span className="section-num">08</span>
+        <span className="section-num slide-in-left">08</span>
         <span className="section-label">At a glance</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
       </div>
 
-      <div className="stats-grid">
+      <div className="stats-grid stagger-children">
         {stats.map((s) => (
-          <div key={s.label} className="stat-card">
+          <div key={s.label} className="stat-card scale-in">
             <div className="stat-card-n">{s.n}</div>
             <div className="stat-card-label mono">{s.label}</div>
             <p className="stat-card-note">{s.note}</p>
@@ -540,9 +540,9 @@ function Press() {
   return (
     <section className="section" id="press" data-screen-label="10 Links">
       <div className="section-head">
-        <span className="section-num">09</span>
+        <span className="section-num slide-in-left">09</span>
         <span className="section-label">Find me</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
       </div>
       <div className="press-row press-row-links">
         <a className="press-link" href="https://softwrd.ai/team" target="_blank" rel="noreferrer">softwrd.ai</a>
@@ -603,15 +603,15 @@ function Resume() {
   return (
     <section className="section" id="resume" data-screen-label="11 Resume">
       <div className="section-head">
-        <span className="section-num">10</span>
+        <span className="section-num slide-in-left">10</span>
         <span className="section-label">Résumé</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
         <a href="https://www.linkedin.com/in/abdulwajedkhan" target="_blank" rel="noreferrer" className="mono link">LinkedIn CV ↗</a>
       </div>
 
-      <div className="resume-list">
+      <div className="resume-list stagger-children">
         {entries.map((e) => (
-          <div key={e.year + e.org} className="resume-row">
+          <div key={e.year + e.org} className="resume-row scale-in">
             <div className="resume-year mono">{e.year}</div>
             <div className="resume-main">
               <div className="resume-role">{e.role}</div>
@@ -629,12 +629,12 @@ function Contact() {
   return (
     <section className="section section-contact" id="contact" data-screen-label="12 Contact">
       <div className="section-head">
-        <span className="section-num">11</span>
+        <span className="section-num slide-in-left">11</span>
         <span className="section-label">Contact</span>
-        <span className="section-rule" />
+        <span className="section-rule rule-draw" />
       </div>
 
-      <h2 className="contact-title">
+      <h2 className="contact-title blur-in">
         Let&apos;s talk systems — <em>Python, Go, or GraphQL.</em>
       </h2>
 
@@ -642,28 +642,28 @@ function Contact() {
         Open to relocation · Remote · Available immediately for interviews
       </div>
 
-      <div className="contact-grid">
-        <a className="contact-card" href="mailto:wajed.abdul.khan@gmail.com">
+      <div className="contact-grid stagger-children">
+        <a className="contact-card scale-in" href="mailto:wajed.abdul.khan@gmail.com">
           <div className="label">Email</div>
           <div className="contact-val">wajed.abdul.khan@gmail.com</div>
         </a>
-        <a className="contact-card" href="https://www.linkedin.com/in/abdulwajedkhan" target="_blank" rel="noreferrer">
+        <a className="contact-card scale-in" href="https://www.linkedin.com/in/abdulwajedkhan" target="_blank" rel="noreferrer">
           <div className="label">LinkedIn</div>
           <div className="contact-val">Abdul Wajed Khan</div>
         </a>
-        <a className="contact-card" href="https://github.com/WazedKhan" target="_blank" rel="noreferrer">
+        <a className="contact-card scale-in" href="https://github.com/WazedKhan" target="_blank" rel="noreferrer">
           <div className="label">GitHub</div>
           <div className="contact-val">@WazedKhan</div>
         </a>
-        <a className="contact-card" href="tel:+8801775070922">
+        <a className="contact-card scale-in" href="tel:+8801775070922">
           <div className="label">Phone / WhatsApp</div>
           <div className="contact-val">+880 1775 070922</div>
         </a>
-        <a className="contact-card" href="https://softwrd.ai" target="_blank" rel="noreferrer">
+        <a className="contact-card scale-in" href="https://softwrd.ai" target="_blank" rel="noreferrer">
           <div className="label">Employer</div>
           <div className="contact-val">Softwrd Limited</div>
         </a>
-        <div className="contact-card contact-card-static">
+        <div className="contact-card contact-card-static scale-in">
           <div className="label">Location</div>
           <div className="contact-val" style={{ fontSize: "22px" }}>Dhaka, Bangladesh</div>
           <div className="mono dim" style={{ fontSize: "11px" }}>Open to global relocation</div>

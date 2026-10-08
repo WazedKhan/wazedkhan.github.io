@@ -40,10 +40,10 @@ function Hero() {
 
       <h1 className="hero-title">
         <span className="hero-eyebrow">— Python, Django &amp; Go · 3+ years production</span>
-        <span className="hero-line-1">
+        <span className="hero-line-1 blur-in">
           <em>Microservices</em> that ship,
         </span>
-        <span className="hero-line-2">
+        <span className="hero-line-2 blur-in">
           <em>GraphQL</em> that scales.
         </span>
       </h1>

@@ -1,141 +1,344 @@
 <!doctype html>
-<html lang="en" data-theme="dark" data-accent="indigo" data-direction="editorial" data-display="instrument" data-density="airy" data-grain="off">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Abdul Wajed Khan — Backend engineer. Python, Django, Go. 93% API performance improvement. 2 published PyPI packages. Acting Tech Lead. Open to relocation and remote roles." />
-  <title>Abdul Wajed Khan — Backend Engineer · Softwrd Limited</title>
+  <title>Wazed Khan, full-stack engineer</title>
+  <meta name="description" content="Abdul Wajed Khan (Wazed), an AI-assisted full-stack engineer in Dhaka with a backend focus: Go, Python and React. Open to relocation to the UK, EU or UAE." />
+  <meta property="og:title" content="Wazed Khan, full-stack engineer" />
+  <meta property="og:description" content="Come see my desk. Go and Python backends, plus the bugs I've squashed." />
+  <meta property="og:image" content="https://wazedkhan.github.io/assets/wazed.jpg" />
+  <meta name="theme-color" content="#efedf6" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23ffd23f'/%3E%3Ccircle cx='20' cy='12' r='2.2' fill='%231c1a2e'/%3E%3Cpath d='M24 15l5 1.5-5 1.5z' fill='%23ff8a3d'/%3E%3C/svg%3E" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
-
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" />
   <link rel="stylesheet" href="styles.css" />
 
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-
-  <script type="text/babel" src="components/Cursor.jsx"></script>
-  <script type="text/babel" src="components/Nav.jsx"></script>
-  <script type="text/babel" src="components/Hero.jsx"></script>
-  <script type="text/babel" src="components/SelectedWork.jsx"></script>
-  <script type="text/babel" src="components/ProjectDetail.jsx"></script>
-  <script type="text/babel" src="components/Sections.jsx"></script>
-  <script type="text/babel" src="components/Tweaks.jsx"></script>
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem("theme"); } catch (e) {}
+      if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js" } }
+  </script>
 </head>
 <body>
-  <div id="root"></div>
+  <header class="topbar">
+    <a class="brand" href="#top">wazed<span>.</span></a>
+    <nav class="toplinks" aria-label="Main">
+      <a href="#bugs">Bugs</a>
+      <a href="#projects">Projects</a>
+      <a href="#journey">Journey</a>
+      <a href="#contact" class="toplinks-cta">Say hi</a>
+      <button class="theme-btn" type="button" aria-label="Switch between day and night">
+        <svg class="sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg>
+        <svg class="moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="currentColor"/></svg>
+      </button>
+    </nav>
+  </header>
 
-  <script type="text/babel">
-    // Persisted tweakable defaults
-    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-      "direction": "editorial",
-      "accent": "indigo",
-      "displayFont": "instrument",
-      "density": "airy",
-      "grain": false,
-      "theme": "dark"
-    }/*EDITMODE-END*/;
+  <main>
+    <!-- HERO: the desk -->
+    <section class="hero" id="top">
+      <div class="hero-sticky">
+        <canvas id="desk" aria-label="A 3D model of my desk in Dhaka. You can drag to look around and click objects on it."></canvas>
+        <div class="tip" role="status"></div>
+        <div class="bubble" role="status"></div>
 
-    function App() {
-      const [theme, setTheme] = React.useState(() => localStorage.getItem("theme") || TWEAK_DEFAULTS.theme);
-      const [activeProject, setActiveProject] = React.useState(null);
-      const [tweaks, setTweaks] = React.useState(TWEAK_DEFAULTS);
-      const [tweaksOpen, setTweaksOpen] = React.useState(false);
+        <div class="hero-copy">
+          <p class="hero-wave">Hi, I'm Wazed <span class="wave" aria-hidden="true">👋</span></p>
+          <h1>I build the backend bits you never notice, until they break.</h1>
+          <p class="hero-sub">AI-assisted full-stack engineer in Dhaka, with a soft spot for the backend: Go, Python and React. This is my desk. Have a look around.</p>
+          <div class="hero-actions">
+            <a class="btn btn-solid" href="#projects">See my work</a>
+            <a class="btn btn-ghost" href="mailto:wajed.abdul.khan@gmail.com">Email me</a>
+          </div>
+        </div>
 
-      // Apply theme to html
-      React.useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("theme", theme);
-      }, [theme]);
+        <p class="hero-hint"><span class="hand">drag to look around, click anything on the desk</span>
+          <svg viewBox="0 0 60 40" width="54" height="36" aria-hidden="true"><path d="M4 6 C 20 4, 40 10, 50 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M42 27 L 51 32 L 53 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </p>
+        <p class="scroll-cue" aria-hidden="true"><span></span>scroll to zoom in</p>
+        <div class="hero-fade"></div>
+      </div>
+    </section>
 
-      // Apply tweaks to html
-      React.useEffect(() => {
-        const d = document.documentElement;
-        d.setAttribute("data-accent", tweaks.accent);
-        d.setAttribute("data-direction", tweaks.direction);
-        d.setAttribute("data-display", tweaks.displayFont);
-        d.setAttribute("data-density", tweaks.density);
-        d.setAttribute("data-grain", tweaks.grain ? "on" : "off");
-      }, [tweaks]);
+    <!-- ABOUT -->
+    <section class="about wrap" id="about">
+      <figure class="polaroid">
+        <img src="assets/wazed.jpg" alt="Wazed smiling in a checked shirt, leaning on a railing outdoors" width="900" height="1125" loading="lazy" />
+        <figcaption class="hand">me, probably thinking about database indexes</figcaption>
+      </figure>
+      <div class="about-text">
+        <h2>Nice to meet you.</h2>
+        <p>My full name is Abdul Wajed Khan, but everyone calls me Wazed. I've spent about four years shipping production software, mostly on the backend in Python, Django and Go, and more and more on the frontend with React and TypeScript.</p>
+        <p>AI tools are part of how I work every day. They help me move faster on scaffolding, tests and unfamiliar code, and I still read and review every line as if it's going straight to production.</p>
+        <p>Django at my first job is what got me hooked on backend work. The part I love is detective work: a vague "the app feels slow" turns into one specific query, one missing lock or one wrong assumption.</p>
+        <p>Right now I'm at <a href="https://softwrd.ai" target="_blank" rel="noreferrer">Softwrd</a>, working remotely with a team spread across Norway and Portugal. Away from the keyboard it's anime, milk tea, and planning a trip to Japan.</p>
+        <p>I also read a lot, mostly fiction. Lately that's been <em>The Alchemist</em>, <em>The Kite Runner</em>, <em>Before the Coffee Gets Cold</em>, <em>Days at the Morisaki Bookshop</em>, Humayun Ahmed's Himu books and <em>Badshah Namdar</em>, and a pile of Jules Verne. You can find them on the shelf in my room at the top of the page.</p>
 
-      // Tweaks postMessage protocol
-      React.useEffect(() => {
-        const onMessage = (e) => {
-          if (!e.data) return;
-          if (e.data.type === "__activate_edit_mode") setTweaksOpen(true);
-          if (e.data.type === "__deactivate_edit_mode") setTweaksOpen(false);
-        };
-        window.addEventListener("message", onMessage);
-        window.parent.postMessage({ type: "__edit_mode_available" }, "*");
-        return () => window.removeEventListener("message", onMessage);
-      }, []);
+        <div class="board" aria-label="Tools I use">
+          <p class="board-label hand">my toolbox (go on, drag them around)</p>
+          <span class="sticker s-go">Go</span>
+          <span class="sticker s-py">Python</span>
+          <span class="sticker s-dj">Django</span>
+          <span class="sticker s-pg">PostgreSQL</span>
+          <span class="sticker s-rd">Redis</span>
+          <span class="sticker s-gql">GraphQL</span>
+          <span class="sticker s-dk">Docker</span>
+          <span class="sticker s-k8">Kubernetes</span>
+          <span class="sticker s-aws">AWS</span>
+          <span class="sticker s-echo">Echo</span>
+          <span class="sticker s-fa">FastAPI</span>
+          <span class="sticker s-ts">TypeScript</span>
+          <span class="sticker s-re">React</span>
+          <span class="sticker s-ai">AI tools</span>
+        </div>
+      </div>
+    </section>
 
-      // Persist tweak changes to file
-      const updateTweaks = React.useCallback((updater) => {
-        setTweaks((prev) => {
-          const next = typeof updater === "function" ? updater(prev) : updater;
-          const diff = {};
-          for (const k of Object.keys(next)) if (next[k] !== prev[k]) diff[k] = next[k];
-          if (Object.keys(diff).length) {
-            window.parent.postMessage({ type: "__edit_mode_set_keys", edits: diff }, "*");
-          }
-          return next;
-        });
-      }, []);
+    <!-- BUGS -->
+    <section class="bugs wrap" id="bugs">
+      <div class="sec-head">
+        <h2>Bugs I've squashed</h2>
+        <p>Three stories from production. Nobody throws a party when the bug doesn't happen, so I'm telling you instead.</p>
+      </div>
+      <div class="bug-cards">
+        <article class="bug">
+          <svg class="doodle" viewBox="0 0 160 90" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 70 q10 -26 30 -14 q14 10 0 18 h-30z"/><path d="M44 58 q6 -14 0 -22 M50 58 q10 -10 8 -20"/>
+              <path d="M78 52 h16 M88 46 l8 6 -8 6" />
+              <path d="M112 68 q2 -22 22 -22 q14 0 16 16 l0 6 z"/><path d="M128 46 q-4 -20 2 -30 M138 46 q2 -18 10 -26"/>
+            </g>
+            <circle cx="142" cy="56" r="2.5" fill="currentColor"/>
+          </svg>
+          <h3>The 30-second API</h3>
+          <p><a href="https://healthos.io/about" target="_blank" rel="noreferrer">HealthOS</a> pages hung every busy afternoon. The cause was N+1 queries hiding in serializers, plus hot lookups with no index. I profiled each endpoint, redesigned the indexes and cached the reads that barely changed in Redis.</p>
+          <p class="bug-result">Responses went from about 30s to 2s, a 93% drop.</p>
+        </article>
+        <article class="bug">
+          <svg class="doodle" viewBox="0 0 160 90" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 14 h40 v56 l-7 -5 -7 5 -7 -5 -7 5 -7 -5 -5 5z"/><path d="M28 28 h20 M28 38 h20 M28 48 h12"/>
+              <path d="M30 20 h40 v56" opacity=".45"/>
+              <rect x="98" y="38" width="44" height="34" rx="6"/><path d="M108 38 v-10 a12 12 0 0 1 24 0 v10"/><circle cx="120" cy="55" r="4"/>
+            </g>
+          </svg>
+          <h3>Billed twice for one order</h3>
+          <p>Under load, two requests could both check "is there an invoice yet?" before either one saved it. I wrapped invoice creation in a transaction, locked the row with <code>select_for_update()</code>, and added a unique constraint as the last line of defence.</p>
+          <p class="bug-result">No more duplicate invoices for about 4,500 users.</p>
+        </article>
+        <article class="bug">
+          <svg class="doodle" viewBox="0 0 160 90" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="88" y="14" width="46" height="62" rx="5"/><path d="M96 28 h30 M96 42 h30 M96 56 h30"/>
+              <circle cx="52" cy="22" r="8"/><path d="M52 30 v24 M52 54 l-10 20 M52 54 l10 20 M52 38 l30 -8 M52 38 l32 8"/>
+            </g>
+            <circle cx="128" cy="28" r="2.5" fill="currentColor"/><circle cx="128" cy="42" r="2.5" fill="currentColor"/>
+          </svg>
+          <h3>The day the lead left</h3>
+          <p>The tech lead resigned and nobody else really knew the backend, while about 5,000 people used it every day. I took over production support, kept it stable, then stepped up as acting tech lead for a team of seven.</p>
+          <p class="bug-result">It stayed up, and I learned to lead.</p>
+        </article>
+      </div>
+    </section>
 
-      // Reveal-on-scroll
-      React.useEffect(() => {
-        const io = new IntersectionObserver(
-          (entries) => {
-            for (const ent of entries) {
-              if (ent.isIntersecting) ent.target.classList.add("in");
-            }
-          },
-          { threshold: 0.1, rootMargin: "-60px 0px" }
-        );
-        document.querySelectorAll(".section, .hero-meta").forEach((el) => {
-          el.classList.add("reveal");
-          io.observe(el);
-        });
-        return () => io.disconnect();
-      }, []);
+    <!-- PROJECTS: horizontal scroll -->
+    <section class="projects" id="projects">
+      <div class="projects-sticky">
+        <div class="projects-head wrap">
+          <h2>Things I've built</h2>
+          <p class="projects-count"><span id="proj-i">1</span> of 5</p>
+        </div>
+        <div class="track">
+          <article class="proj p-work">
+            <div class="proj-text">
+              <p class="proj-kind">My day job at Softwrd</p>
+              <h3>Placepoint and Hjemla</h3>
+              <p><a href="https://placepoint.no/" target="_blank" rel="noreferrer">Placepoint</a> is a Norwegian property platform that pulls ownership, zoning, tenant, market and risk data from over 2,300 sources into one place for owners, developers, banks and investors. <a href="https://www.hjemla.no/" target="_blank" rel="noreferrer">Hjemla</a>, part of Placepoint, helps people in Norway follow home prices and see what their place is worth. I work on the Go and GraphQL backend behind them, after starting on <a href="https://www.propcloud.no/" target="_blank" rel="noreferrer">PropCloud</a>.</p>
+              <ul class="chips"><li>Go</li><li>Echo</li><li>GraphQL</li><li>MongoDB</li><li>AWS</li></ul>
+            </div>
+            <svg class="proj-art" viewBox="0 0 300 300" aria-hidden="true">
+              <path class="fjord" d="M30 250 C 70 230 60 200 100 190 S 130 140 170 150 S 210 100 250 90 S 270 50 280 40" />
+              <g class="house h1"><path d="M60 170 l30 -26 30 26 v40 h-60z"/><rect x="82" y="186" width="16" height="24"/></g>
+              <g class="house h2"><path d="M170 220 l26 -22 26 22 v34 h-52z"/><rect x="189" y="234" width="14" height="20"/></g>
+              <g class="pin"><path d="M200 40 c-22 0 -36 16 -36 34 c0 26 36 60 36 60 s36 -34 36 -60 c0 -18 -14 -34 -36 -34z"/><circle cx="200" cy="74" r="12"/></g>
+            </svg>
+          </article>
 
-      return (
-        <>
-          <Cursor />
-          <Nav theme={theme} onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />
-          <main>
-            <Hero />
-            <SelectedWork onOpen={setActiveProject} />
-            <About />
-            <ImpactMetrics />
-            <Services />
-            <OpenSource />
-            <Writing />
-            <Now />
-            <Testimonials />
-            <Press />
-            <Resume />
-            <Contact />
-          </main>
-          <ProjectDetail project={activeProject} onClose={() => setActiveProject(null)} />
-          <Tweaks
-            state={tweaks}
-            setState={updateTweaks}
-            open={tweaksOpen}
-            onClose={() => {
-              setTweaksOpen(false);
-              window.parent.postMessage({ type: "__edit_mode_deactivated" }, "*");
-            }}
-          />
-        </>
-      );
-    }
+          <article class="proj p-grain">
+            <div class="proj-text">
+              <p class="proj-kind">Client project, Australia</p>
+              <h3>GrainX</h3>
+              <p>A live auction marketplace where farmers list grain and buyers bid on it. I designed and built it solo, from first sketch to handover. The fun part was bidding: lots of buyers on the same lot at once, so every bid runs in a transaction that keeps prices consistent.</p>
+              <ul class="chips"><li>Django</li><li>PostgreSQL</li></ul>
+              <a class="proj-link" href="https://app.grainmarketplace.com.au/" target="_blank" rel="noreferrer">Open the live app</a>
+            </div>
+            <svg class="proj-art" viewBox="0 0 300 300" aria-hidden="true">
+              <g class="wheat" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round">
+                <path d="M80 280 Q 86 180 70 90"/><path d="M150 280 Q 150 170 160 70"/><path d="M220 280 Q 214 190 236 100"/>
+              </g>
+              <g class="grains">
+                <ellipse cx="66" cy="96" rx="9" ry="16"/><ellipse cx="80" cy="122" rx="9" ry="16"/><ellipse cx="62" cy="134" rx="9" ry="16"/>
+                <ellipse cx="160" cy="76" rx="9" ry="16"/><ellipse cx="146" cy="104" rx="9" ry="16"/><ellipse cx="170" cy="112" rx="9" ry="16"/>
+                <ellipse cx="236" cy="106" rx="9" ry="16"/><ellipse cx="222" cy="134" rx="9" ry="16"/><ellipse cx="244" cy="142" rx="9" ry="16"/>
+              </g>
+              <g class="tags"><rect x="170" y="180" width="110" height="44" rx="10"/><text x="225" y="208">bid $418</text></g>
+            </svg>
+          </article>
 
-    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-  </script>
+          <article class="proj p-solace">
+            <div class="proj-text">
+              <p class="proj-kind">Personal project</p>
+              <h3>Solace</h3>
+              <p>A habit tracker and journal API written in plain Go, without a framework. It covers auth with JWT and bcrypt, habit streaks, journal entries you can soft-delete, and photo uploads straight to S3. The whole thing ships as a tiny multi-stage Docker image.</p>
+              <ul class="chips"><li>Go</li><li>pgx</li><li>PostgreSQL</li><li>S3</li><li>Docker</li></ul>
+            </div>
+            <svg class="proj-art" viewBox="0 0 300 300" aria-hidden="true">
+              <g class="cal">
+                <rect x="40" y="70" width="220" height="190" rx="18" class="cal-bg"/>
+                <g class="days"></g>
+              </g>
+              <path class="flame" d="M150 20 C 175 45 180 60 165 75 C 175 55 160 50 156 40 C 150 60 130 62 138 80 C 118 70 122 40 150 20z"/>
+            </svg>
+          </article>
+
+          <article class="proj p-dam">
+            <div class="proj-text">
+              <p class="proj-kind">Building it now</p>
+              <h3>DamDekho</h3>
+              <p>"Dam dekho" means "check the price" in Bangla. Restaurant owners in Bangladesh log what each supplier charges, then see the cheapest source for every item and how prices have moved. It has a Go backend and a bilingual React frontend, and I'm building it into a real business.</p>
+              <ul class="chips"><li>Go</li><li>Echo</li><li>PostgreSQL</li><li>React</li><li>TypeScript</li></ul>
+              <a class="proj-link" href="https://damdekho-frontend.vercel.app/" target="_blank" rel="noreferrer">Try the live app</a>
+              <!-- Fill in the demo login, then remove the "hidden" attribute -->
+              <p class="demo" hidden>Demo login: <code>DEMO_PHONE</code> / <code>DEMO_PASSWORD</code></p>
+            </div>
+            <svg class="proj-art" viewBox="0 0 300 300" aria-hidden="true">
+              <g class="ptag t1"><path d="M40 70 h120 l30 30 -30 30 h-120z"/><circle cx="62" cy="100" r="7"/><text x="110" y="110">৳ 72</text></g>
+              <g class="ptag t2"><path d="M70 150 h120 l30 30 -30 30 h-120z"/><circle cx="92" cy="180" r="7"/><text x="140" y="190">৳ 68</text></g>
+              <g class="ptag t3 best"><path d="M100 230 h140 l30 30 -30 30 h-140z" transform="translate(-10 -12)"/><text x="160" y="268">৳ 64</text><text class="best-l" x="160" y="230">cheapest</text></g>
+            </svg>
+          </article>
+
+          <article class="proj p-uni">
+            <div class="proj-text">
+              <p class="proj-kind">University system</p>
+              <h3>Unisphere</h3>
+              <p>The online results portal for SSTU, where students sign in to see their grades. I worked on secure login, account recovery and bilingual guidance, so a nervous student on results day doesn't get stuck at the door.</p>
+              <ul class="chips"><li>Web</li><li>Auth</li><li>Bangla and English</li></ul>
+              <a class="proj-link" href="https://orps.sstu.ac.bd/login" target="_blank" rel="noreferrer">Open the portal</a>
+            </div>
+            <svg class="proj-art" viewBox="0 0 300 300" aria-hidden="true">
+              <rect class="card" x="50" y="90" width="200" height="170" rx="16"/>
+              <path class="cap" d="M150 30 L 240 70 L 150 110 L 60 70 Z"/><path class="cap2" d="M100 88 v34 q50 26 100 0 v-34"/>
+              <path class="tassel" d="M240 70 v50" />
+              <g class="lines"><rect x="80" y="150" width="140" height="12" rx="6"/><rect x="80" y="178" width="100" height="12" rx="6"/><rect x="80" y="206" width="120" height="12" rx="6"/></g>
+            </svg>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- JOURNEY -->
+    <section class="journey wrap" id="journey">
+      <div class="sec-head">
+        <h2>The route so far</h2>
+        <p>Every stop on the line taught me something. The next one isn't decided yet.</p>
+      </div>
+      <ol class="line">
+        <li class="stop">
+          <span class="dot"></span>
+          <p class="when">Graduated</p>
+          <h3>IUBAT</h3>
+          <p>BSc in Computer Science and Engineering, Dhaka.</p>
+        </li>
+        <li class="stop">
+          <span class="dot"></span>
+          <p class="when">Jul 2022</p>
+          <h3>Kodeeo</h3>
+          <p>Programming mentor. I guided 10 students through Django and React projects.</p>
+        </li>
+        <li class="stop">
+          <span class="dot"></span>
+          <p class="when">Dec 2022</p>
+          <h3>Repliq</h3>
+          <p>Software developer, then acting tech lead on <a href="https://healthos.io/about" target="_blank" rel="noreferrer">HealthOS</a>, software for pharmacies and hospitals in Bangladesh. That's where the bugs above happened.</p>
+        </li>
+        <li class="stop is-now">
+          <span class="dot"></span>
+          <p class="when">Dec 2024 to now</p>
+          <h3>Softwrd</h3>
+          <p>Backend engineer on <a href="https://placepoint.no/" target="_blank" rel="noreferrer">Placepoint</a> and <a href="https://www.hjemla.no/" target="_blank" rel="noreferrer">Hjemla</a>. I'm building a Go service layer that gives client apps one clean API over older microservices.</p>
+        </li>
+        <li class="stop is-next">
+          <span class="dot"></span>
+          <p class="when">Next stop</p>
+          <h3>UK, EU or UAE?</h3>
+          <p>I'm looking for a full-stack or backend role with visa sponsorship, or a remote one. Maybe on your team.</p>
+        </li>
+      </ol>
+      <div class="train-track" aria-hidden="true"><span class="train-fill"></span><span class="train"></span></div>
+    </section>
+
+    <!-- OPEN SOURCE -->
+    <section class="oss wrap" id="oss">
+      <div class="sec-head">
+        <h2>Things I gave away</h2>
+        <p>Two small Python packages I published because I kept needing them, plus <a href="https://github.com/WazedKhan?tab=repositories" target="_blank" rel="noreferrer">100+ repos</a> of experiments on GitHub.</p>
+      </div>
+      <div class="pkgs">
+        <article class="pkg">
+          <h3><a href="https://pypi.org/project/django-notebook-config/" target="_blank" rel="noreferrer">django-notebook-config</a></h3>
+          <p>Use the Django ORM straight from a Jupyter notebook in VS Code or PyCharm, with no shell and no server.</p>
+          <div class="pip"><code>pip install django-notebook-config</code><button type="button" data-copy="pip install django-notebook-config">Copy</button></div>
+        </article>
+        <article class="pkg">
+          <h3><a href="https://pypi.org/project/static-type-enforcer/" target="_blank" rel="noreferrer">static-type-enforcer</a></h3>
+          <p>A decorator that makes Python type hints actually reject bad arguments at runtime, with zero dependencies.</p>
+          <div class="pip"><code>pip install static-type-enforcer</code><button type="button" data-copy="pip install static-type-enforcer">Copy</button></div>
+        </article>
+      </div>
+      <h3 class="writing-head">I also write sometimes</h3>
+      <ul class="articles">
+        <li><a href="https://medium.com/@wazedkhan111024" target="_blank" rel="noreferrer">Graceful shutdown in Go</a></li>
+        <li><a href="https://medium.com/@wazedkhan111024/solving-a-mystery-using-sql-a-detectives-journey-through-databases-and-clues-e9daf70c2bc1" target="_blank" rel="noreferrer">Solving a mystery using SQL</a></li>
+        <li><a href="https://medium.com/@wazedkhan111024/sub-classing-pythons-extending-built-in-immutable-classes-in-python-a06c9ecb759d" target="_blank" rel="noreferrer">Sub-classing Python's immutable built-ins</a></li>
+        <li><a href="https://medium.com/@wazedkhan111024/pythons-new-method-crafting-objects-with-precision-862f29af31c8" target="_blank" rel="noreferrer">Python's __new__, explained</a></li>
+      </ul>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact" id="contact">
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-inner">
+          <span>Let's build something reliable</span><span class="star">✳</span><span>Let's build something reliable</span><span class="star">✳</span><span>Let's build something reliable</span><span class="star">✳</span><span>Let's build something reliable</span><span class="star">✳</span>
+        </div>
+      </div>
+      <div class="wrap contact-body">
+        <h2>Got a full-stack or backend role, or a slow API? I'd love to hear about it.</h2>
+        <a class="contact-mail" href="mailto:wajed.abdul.khan@gmail.com">wajed.abdul.khan@gmail.com</a>
+        <ul class="contact-links">
+          <li><a href="https://www.linkedin.com/in/wajed-khan" target="_blank" rel="noreferrer">LinkedIn</a></li>
+          <li><a href="https://github.com/WazedKhan" target="_blank" rel="noreferrer">GitHub</a></li>
+          <li><a href="https://medium.com/@wazedkhan111024" target="_blank" rel="noreferrer">Medium</a></li>
+          <li><a href="tel:+8801775070922">+880 1775 070922</a></li>
+        </ul>
+        <footer class="footer">
+          <p>© 2026 Abdul Wajed Khan</p>
+          <p class="hand">built by hand in Dhaka, with Three.js and too much tea</p>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="main.js"></script>
 
   <script>
   (async () => {
