@@ -8,6 +8,7 @@ let scene = null;
 const isNight = () => root.getAttribute("data-theme") === "dark";
 function toggleTheme() {
   const next = isNight() ? "light" : "dark";
+  window.trackEvent && window.trackEvent(next === "dark" ? "🌙 Switched to night" : "☀️ Switched to day");
   root.setAttribute("data-theme", next);
   try { localStorage.setItem("theme", next); } catch (e) {}
   document.querySelector('meta[name="theme-color"]').setAttribute("content", next === "dark" ? "#15132a" : "#efedf6");
@@ -37,6 +38,11 @@ const ui = {
     bubbleTimer = setTimeout(() => bubble.classList.remove("on"), 2600);
   },
   toggleTheme,
+  poke(id, label) {
+    const names = { duck: "🦆 Rubber duck", mug: "🍵 Tea mug", plant: "🌵 Cactus", money: "🌿 Money plant", lamp: "💡 Lamp (day/night)", monitor: "🖥️ Monitor (jumped to projects)", poster: "🗻 Tokyo poster", window: "🪟 Window" };
+    const what = id === "book" ? `📚 Book: ${label}` : names[id] || id;
+    window.trackEvent && window.trackEvent(`Desk: ${what}`);
+  },
   goto(sel) { document.querySelector(sel).scrollIntoView({ behavior: reduced ? "auto" : "smooth" }); },
 };
 

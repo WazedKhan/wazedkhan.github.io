@@ -20,7 +20,7 @@
     (function () {
       var t = null;
       try { t = localStorage.getItem("theme"); } catch (e) {}
-      if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      if (t !== "dark") t = "light"; // day mode unless the visitor switched to night
       document.documentElement.setAttribute("data-theme", t);
     })();
   </script>
@@ -338,51 +338,120 @@
     </section>
   </main>
 
-  <script type="module" src="main.js"></script>
-
   <script>
-  (async () => {
-    const WEBHOOK_URL =  "__DISCORD_WEBHOOK_URL__";
+  // Visitor alerts to Discord. The deploy workflow injects the webhook URL.
+  // Your own visits: open the site once with ?me to stop alerts from that browser (?me=off to undo).
+  (() => {
+    const WEBHOOK_URL = "__DISCORD_WEBHOOK_URL__";
+    const events = [];
+    window.trackEvent = (e) => { if (events.length < 40) events.push(e); };
 
-    const info = {
-      time: new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
-      page: location.href,
-      referrer: document.referrer || "Direct / None",
-      browser: navigator.userAgent,
-      screen: `${screen.width}x${screen.height}`,
-      language: navigator.language,
+    const store = {
+      get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
+      set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} },
+      del(k) { try { localStorage.removeItem(k); } catch (_) {} },
     };
+    const params = new URLSearchParams(location.search);
+    if (params.has("me")) params.get("me") === "off" ? store.del("wk_owner") : store.set("wk_owner", "1");
+    const local = ["localhost", "127.0.0.1", ""].includes(location.hostname);
+    if (WEBHOOK_URL.startsWith("__") || local || store.get("wk_owner")) return;
 
-    // Optional: get approximate location via free IP API (no key needed)
-    let location_info = "Unknown";
-    try {
-      const geo = await fetch("https://ipinfo.io/json").then(r => r.json());
-      location_info = `${geo.city}, ${geo.region}, ${geo.country} (${geo.ip})`;
-    } catch (_) {}
+    const start = Date.now();
+    const ua = navigator.userAgent;
+    const os = /iPhone|iPad|iPod/.test(ua) ? "iOS" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac OS X/.test(ua) ? "macOS" : /CrOS/.test(ua) ? "ChromeOS" : /Linux/.test(ua) ? "Linux" : "Unknown OS";
+    const browser = /LinkedInApp/.test(ua) ? "LinkedIn in-app browser" : /FBAN|FBAV/.test(ua) ? "Facebook in-app browser" : /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "Unknown browser";
+    const device = /iPad|Tablet/.test(ua) ? "Tablet" : /Mobi|iPhone|Android/.test(ua) ? "Mobile" : "Desktop";
+    const visits = Number(store.get("wk_visits") || 0) + 1;
+    const firstSeen = store.get("wk_first") || new Date().toISOString().slice(0, 10);
+    store.set("wk_visits", String(visits)); store.set("wk_first", firstSeen);
 
-    await fetch(WEBHOOK_URL, {
-      method: "POST",
+    const utm = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "ref", "src"]
+      .filter((k) => params.get(k)).map((k) => `${k}=${params.get(k)}`).join(", ");
+    let ref = "Direct (typed, bookmark or app)";
+    if (document.referrer) { try { const r = new URL(document.referrer); ref = r.hostname === location.hostname ? "Internal" : r.hostname + r.pathname; } catch (_) { ref = document.referrer; } }
+
+    const cut = (s, n = 1000) => { s = String(s || "–"); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
+    const send = (embed, keepalive = false) => fetch(WEBHOOK_URL, {
+      method: "POST", keepalive,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: "Visitor Alter 😀",
-        avatar_url: "https://wazedkhan.github.io/favicon.ico",
-        embeds: [{
-          title: "🚀 Someone just checked out the portfolio! ",
-          color: 0x5865F2,
-          fields: [
-            { name: "🕐 Time (BD)", value: info.time, inline: true },
-            { name: "📍 Location", value: location_info, inline: true },
-            { name: "🔗 Referrer", value: info.referrer, inline: false },
-            { name: "🖥️ Screen", value: info.screen, inline: true },
-            { name: "🌐 Language", value: info.language, inline: true },
-            { name: "📡 User Agent", value: `\`\`\`${info.browser}\`\`\``, inline: false },
-          ],
-          footer: { text: "wazedkhan.github.io" },
-          timestamp: new Date().toISOString(),
-        }]
-      })
+      body: JSON.stringify({ username: "Portfolio Visitor Alert", avatar_url: "https://wazedkhan.github.io/assets/wazed.jpg", embeds: [embed] }),
+    }).catch(() => {});
+
+    // 1) Arrival
+    (async () => {
+      let geo = {};
+      try { geo = await fetch("https://ipinfo.io/json").then((r) => r.json()); } catch (_) {}
+      const place = [geo.city, geo.region, geo.country].filter(Boolean).join(", ") || "Unknown";
+      const fields = [
+        { name: "Location", value: cut(place), inline: true },
+        { name: "Network", value: cut(geo.org || "Unknown"), inline: true },
+        { name: "Their local time", value: cut(new Date().toLocaleString("en-GB", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, dateStyle: "medium", timeStyle: "short" }) + ` (${Intl.DateTimeFormat().resolvedOptions().timeZone})`), inline: false },
+        { name: "Came from", value: cut(ref), inline: true },
+        { name: "Campaign / link tag", value: cut(utm || "None"), inline: true },
+        { name: "Landing page", value: cut(location.pathname + location.search + location.hash), inline: false },
+        { name: "Device", value: cut(`${device}, ${os}, ${browser}`), inline: true },
+        { name: "Screen", value: cut(`${screen.width}×${screen.height} (window ${innerWidth}×${innerHeight})`), inline: true },
+        { name: "Language", value: cut((navigator.languages || [navigator.language]).slice(0, 3).join(", ")), inline: true },
+        { name: "Visit", value: visits === 1 ? "First visit" : `Visit #${visits} (first seen ${firstSeen})`, inline: true },
+        { name: "IP", value: cut(geo.ip || "Unknown"), inline: true },
+      ];
+      send({
+        title: visits === 1 ? "👀 New visitor on your portfolio" : "🔁 Returning visitor on your portfolio",
+        color: visits === 1 ? 0x3f7f52 : 0x5b6fd6,
+        fields,
+        footer: { text: "wazedkhan.github.io · Bangladesh time " + new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka", timeStyle: "short", dateStyle: "medium" }) },
+        timestamp: new Date().toISOString(),
+      });
+    })();
+
+    // 2) What they did, sent when they leave
+    const seen = new Set();
+    let maxScroll = 0;
+    addEventListener("scroll", () => {
+      const h = document.documentElement.scrollHeight - innerHeight;
+      if (h > 0) maxScroll = Math.max(maxScroll, Math.round((scrollY / h) * 100));
+    }, { passive: true });
+    addEventListener("DOMContentLoaded", () => {
+      if (!("IntersectionObserver" in window)) return;
+      const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && seen.add(e.target.id)), { threshold: 0.25 });
+      document.querySelectorAll("main > section[id]").forEach((s) => io.observe(s));
     });
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (a && a.href) {
+        const label = a.href.startsWith("mailto:") ? "📧 Email link" : a.href.startsWith("tel:") ? "📞 Phone link" : a.hostname === location.hostname ? null : `🔗 ${a.textContent.trim().slice(0, 40)} (${a.hostname})`;
+        if (label) trackEvent(label);
+      }
+      const c = e.target.closest("[data-copy]");
+      if (c) trackEvent(`📋 Copied: ${c.dataset.copy}`);
+    }, true);
+
+    let sent = false;
+    const summary = () => {
+      if (sent) return;
+      const secs = Math.round((Date.now() - start) / 1000);
+      if (secs < 4) return;
+      sent = true;
+      const mins = secs >= 60 ? `${Math.floor(secs / 60)}m ${secs % 60}s` : `${secs}s`;
+      const order = ["top", "about", "bugs", "projects", "journey", "oss", "contact"];
+      send({
+        title: "📊 Visit summary",
+        color: 0xff7f50,
+        fields: [
+          { name: "Time on page", value: mins, inline: true },
+          { name: "Scrolled", value: `${maxScroll}%`, inline: true },
+          { name: "From", value: cut(`${device}, ${browser}`), inline: true },
+          { name: "Sections seen", value: cut(order.filter((s) => seen.has(s)).join(", ") || "Only the top"), inline: false },
+          { name: "What they clicked", value: cut(events.length ? events.join("\n") : "Nothing, just looked around"), inline: false },
+        ],
+        timestamp: new Date().toISOString(),
+      }, true);
+    };
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") summary(); });
+    addEventListener("pagehide", summary);
   })();
-</script>
+  </script>
+
+  <script type="module" src="main.js"></script>
 </body>
 </html>
