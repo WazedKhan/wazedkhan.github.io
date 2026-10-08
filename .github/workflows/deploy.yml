@@ -19,6 +19,12 @@ jobs:
         run: |
           sed -i "s|__DISCORD_WEBHOOK_URL__|${WEBHOOK}|g" index.html
 
+      - name: Stamp file versions
+        # Every deploy gets new file URLs (?v=<commit>), so browsers never mix
+        # freshly deployed files with old cached ones.
+        run: |
+          sed -i "s|__BUILD__|${GITHUB_SHA::7}|g" index.html main.js scene.js
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
