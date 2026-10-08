@@ -1,3 +1,6 @@
+import { reply as catReply, GREETING, SUGGESTIONS } from "./cat-brain.js";
+import { isMuted, setMuted, meow } from "./cat-sound.js";
+
 const root = document.documentElement;
 const body = document.body;
 const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -39,12 +42,81 @@ const ui = {
   },
   toggleTheme,
   poke(id, label) {
-    const names = { duck: "🦆 Rubber duck", mug: "🍵 Tea mug", plant: "🌵 Cactus", money: "🌿 Money plant", lamp: "💡 Lamp (day/night)", monitor: "🖥️ Monitor (jumped to projects)", poster: "🗻 Tokyo poster", window: "🪟 Window" };
+    const names = { cat: "🐱 Mochi the cat (chat opened)", "cat-pet": "🐱 Petted Mochi", duck: "🦆 Rubber duck", mug: "🍵 Tea mug", plant: "🌵 Cactus", money: "🌿 Money plant", lamp: "💡 Lamp (day/night)", monitor: "🖥️ Monitor (jumped to projects)", poster: "🗻 Tokyo poster", window: "🪟 Window" };
     const what = id === "book" ? `📚 Book: ${label}` : names[id] || id;
     window.trackEvent && window.trackEvent(`Desk: ${what}`);
   },
   goto(sel) { document.querySelector(sel).scrollIntoView({ behavior: reduced ? "auto" : "smooth" }); },
 };
+
+// ---------- Mochi, the desk cat: chat ----------
+const catChat = document.getElementById("cat-chat");
+const catLog = catChat.querySelector(".cat-chat-log");
+const catChips = catChat.querySelector(".cat-chat-chips");
+const catForm = catChat.querySelector(".cat-chat-form");
+const catInput = catForm.elements.q;
+let catGreeted = false, catBusy = false;
+function catMsg(text, who) {
+  const p = document.createElement("p");
+  p.className = "msg " + who;
+  // turn emails and links into real links, everything else stays plain text
+  text.split(/(https?:\/\/[^\s]+[^\s.,)]|[\w.+-]+@[\w-]+\.[\w.]+\w)/).forEach((part, i) => {
+    if (i % 2 === 0) { if (part) p.append(part); return; }
+    const a = document.createElement("a");
+    a.textContent = part.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+    a.href = part.includes("@") && !part.startsWith("http") ? "mailto:" + part : part;
+    if (a.href.startsWith("http")) { a.target = "_blank"; a.rel = "noreferrer"; }
+    p.append(a);
+  });
+  catLog.appendChild(p);
+  catLog.scrollTop = catLog.scrollHeight;
+  return p;
+}
+function catSetChips(list) {
+  catChips.replaceChildren(...list.map((t) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = t;
+    b.addEventListener("click", () => { b.remove(); catAsk(t); });
+    return b;
+  }));
+}
+async function catAsk(q) {
+  q = q.trim();
+  if (!q || catBusy) return;
+  catBusy = true;
+  catMsg(q, "you");
+  catInput.value = "";
+  const typing = catMsg("...", "cat typing");
+  const [{ text, intent }] = await Promise.all([
+    catReply(q),
+    new Promise((r) => setTimeout(r, reduced ? 0 : 450 + Math.random() * 400)),
+  ]);
+  typing.remove();
+  catMsg(text, "cat");
+  if (scene && scene.catTalk) scene.catTalk();
+  window.trackEvent && window.trackEvent(`🐱 Mochi asked about: ${intent}`);
+  catBusy = false;
+}
+function openCat() {
+  if (!catChat.hidden) return;
+  catChat.hidden = false;
+  requestAnimationFrame(() => catChat.classList.add("on"));
+  if (!catGreeted) { catGreeted = true; catMsg(GREETING, "cat"); catSetChips(SUGGESTIONS); }
+  if (window.matchMedia("(pointer: fine)").matches) catInput.focus({ preventScroll: true });
+}
+function closeCat() {
+  catChat.classList.remove("on");
+  catChat.hidden = true;
+}
+catForm.addEventListener("submit", (e) => { e.preventDefault(); catAsk(catInput.value); });
+catChat.querySelector(".cat-chat-x:not(.cat-chat-snd)").addEventListener("click", closeCat);
+const catSnd = catChat.querySelector(".cat-chat-snd");
+const paintSnd = () => { catSnd.setAttribute("aria-pressed", String(isMuted())); catSnd.setAttribute("aria-label", isMuted() ? "Unmute Mochi" : "Mute Mochi"); };
+paintSnd();
+catSnd.addEventListener("click", () => { setMuted(!isMuted()); paintSnd(); if (!isMuted()) meow(true); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !catChat.hidden) closeCat(); });
+ui.openCat = openCat;
+ui.catOpen = () => !catChat.hidden;
 
 (async () => {
   try {
@@ -133,6 +205,7 @@ function onScroll() {
   heroHint.style.opacity = 1 - clamp(hp * 6);
   scrollCue.style.opacity = 1 - clamp(hp * 8);
   heroFade.style.opacity = clamp((hp - 0.78) / 0.2);
+  if (hp > 0.45 && !catChat.hidden) closeCat();
 
   // projects
   if (wide.matches) {

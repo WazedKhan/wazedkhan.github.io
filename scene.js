@@ -1,6 +1,7 @@
 // Wazed's desk in Dhaka, as a little Three.js diorama.
 // Drag to look around, click objects, scroll to fly into the monitor.
 import * as THREE from "three";
+import { purr, meow } from "./cat-sound.js";
 
 const CODE = `package main
 
@@ -392,6 +393,165 @@ export function startScene(canvas, ui) {
   [-0.07, 0.07].forEach((x) => { const e = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), new THREE.MeshBasicMaterial({ color: 0x1c1a2e })); e.position.set(x, 0.47, 0.26); duck.add(e); });
   tag(duck, "duck", "Senior debugging consultant");
 
+  // ---- Mochi, the desk cat (click to chat, stroke to pet) ----
+  const CATC = { fur: 0xf0a05a, dark: 0xc9743a, cream: 0xfbe9d0, pink: 0xff9aa8 };
+  const cat = new THREE.Group(); room.add(cat);
+  cat.position.set(1.55, 3.425, -4.68); cat.rotation.y = 0.85; cat.scale.setScalar(1.15);
+  const furMat = mat(CATC.fur), darkMat = mat(CATC.dark), creamMat = mat(CATC.cream), pinkMat = mat(CATC.pink);
+  const part = (geo, m, x, y, z, parent) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; parent.add(o); return o; };
+  const catBody = new THREE.Group(); cat.add(catBody);
+  const torso = part(new THREE.SphereGeometry(0.3, 16, 12), furMat, 0, 0.21, 0, catBody); torso.scale.set(0.95, 0.7, 1.35);
+  const belly = part(new THREE.SphereGeometry(0.2, 12, 10), creamMat, 0, 0.16, 0.2, catBody); belly.scale.set(1.05, 0.8, 0.9);
+  [-0.2, -0.07, 0.06].forEach((z) => { // stripes over the back
+    const k = Math.sqrt(1 - (z / 0.405) ** 2) * 1.03;
+    const s = part(new THREE.TorusGeometry(1, 0.075, 5, 16, Math.PI), darkMat, 0, 0.21, z, catBody);
+    s.scale.set(0.285 * k, 0.21 * k, 0.25);
+  });
+  const catHead = new THREE.Group(); catHead.position.set(0, 0.43, 0.32); catBody.add(catHead);
+  const skull = part(new THREE.SphereGeometry(0.2, 16, 12), furMat, 0, 0, 0, catHead); skull.scale.set(1.12, 0.95, 0.95);
+  part(new THREE.BoxGeometry(0.03, 0.07, 0.02), darkMat, 0, 0.13, 0.12, catHead).rotation.x = -0.5;
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1c1a2e });
+  const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const whiskerMat = new THREE.MeshBasicMaterial({ color: 0xfff8ee });
+  const eyes = [];
+  [-1, 1].forEach((s) => {
+    const ear = part(new THREE.ConeGeometry(0.08, 0.17, 4), furMat, s * 0.12, 0.17, -0.02, catHead); ear.rotation.set(-0.1, Math.PI / 4, -s * 0.35);
+    const inner = part(new THREE.ConeGeometry(0.045, 0.1, 3), pinkMat, s * 0.118, 0.155, 0.015, catHead); inner.rotation.set(-0.1, 0, -s * 0.35);
+    const eye = new THREE.Group(); eye.position.set(s * 0.078, 0.03, 0.172); catHead.add(eye);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.036, 12, 8), eyeMat); ball.scale.z = 0.6; eye.add(ball);
+    const glint = new THREE.Mesh(new THREE.SphereGeometry(0.011, 6, 4), glintMat); glint.position.set(0.012, 0.014, 0.02); eye.add(glint);
+    eyes.push(eye);
+    part(new THREE.SphereGeometry(0.05, 10, 8), creamMat, s * 0.035, -0.065, 0.16, catHead);
+    for (let j = 0; j < 2; j++) {
+      const wk = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.006, 0.006), whiskerMat);
+      wk.position.set(s * 0.14, -0.055 + j * 0.03, 0.15); wk.rotation.set(0, -s * 0.35, s * (j - 0.5) * 0.3); catHead.add(wk);
+    }
+  });
+  const nose = part(new THREE.SphereGeometry(0.02, 8, 6), pinkMat, 0, -0.03, 0.2, catHead); nose.scale.set(1.3, 0.8, 0.8);
+  const paws = [-1, 1].map((s) => { const p = part(new THREE.SphereGeometry(0.065, 10, 8), creamMat, s * 0.11, 0.04, 0.42, catBody); p.scale.set(1, 0.6, 1.3); return p; });
+  const pawR = paws[1];
+  const legs = [[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([sx, sz]) => {
+    const hip = new THREE.Group(); hip.position.set(sx * 0.13, 0.12, sz * 0.24); catBody.add(hip);
+    const leg = part(new THREE.CapsuleGeometry(0.045, 0.2, 4, 8), sz > 0 ? creamMat : furMat, 0, -0.15, 0, hip);
+    hip.scale.y = 0.02; hip.userData = { front: sz > 0, phase: (sx * sz > 0) ? 0 : Math.PI };
+    return hip;
+  });
+  const tailJoints = [];
+  let tailParent = new THREE.Group(); tailParent.position.set(0.1, 0.1, -0.36); catBody.add(tailParent);
+  for (let i = 0; i < 7; i++) {
+    const j = new THREE.Group(); if (i > 0) j.position.z = -0.085; tailParent.add(j);
+    const seg = part(new THREE.CapsuleGeometry(0.05 - i * 0.003, 0.05, 4, 8), i >= 5 ? darkMat : furMat, 0, 0, -0.0425, j);
+    seg.rotation.x = Math.PI / 2;
+    j.userData.base = i === 0 ? 0.9 : 0.38;
+    j.rotation.x = i === 0 ? -0.3 : i >= 5 ? 0.25 : 0.02;
+    tailJoints.push(j); tailParent = j;
+  }
+  tag(cat, "cat", "Mochi. Click to chat, stroke to pet, drag to move");
+
+  // little floating hearts and z's
+  const glyphTex = (draw) => canvasTex(64, 64, (c, w, h) => draw(c, w, h));
+  const zTex = glyphTex((c, w, h) => { c.fillStyle = "#6b6be0"; c.font = "800 50px 'Bricolage Grotesque', sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("z", w / 2, h / 2); });
+  const heartTex = glyphTex((c) => { c.fillStyle = "#ff6f91"; c.beginPath(); c.moveTo(32, 54); c.bezierCurveTo(2, 34, 8, 6, 32, 22); c.bezierCurveTo(56, 6, 62, 34, 32, 54); c.fill(); });
+  const catFx = [];
+  function catPuff(tex, n) {
+    for (let i = 0; i < n; i++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+      s.raycast = () => {};
+      s.scale.setScalar(0.2); s.visible = false;
+      s.userData = { t: -i * 0.22, vx: (Math.random() - 0.5) * 0.4, ph: Math.random() * 6 };
+      cat.add(s); catFx.push(s);
+    }
+  }
+  let catLast = performance.now(), catHappy = 0, catSwat = 0, catChatter = 0, catSleep = 0, nextBlink = 0, blinkAt = 0, zAt = 0, stroke = 0, petN = 0;
+  const pointerNdc = new THREE.Vector2(0, 0);
+  const PURR_LINES = ["Purrrr.", "Mrrrp. Again.", "Okay, that's the spot.", "Purr. Wazed never stops for pets during a deploy."];
+  // ---- Where Mochi can go: spots to rest on, and how they connect ----
+  const SPOTS = {
+    sillA: { p: [1.55, 3.425, -4.68], yaw: 0.85, rest: true },
+    sillB: { p: [2.95, 3.425, -4.68], yaw: 0.6, rest: true },
+    deskR: { p: [0.95, 2.58, -3.0] },
+    deskL: { p: [-3.2, 2.58, -3.55], yaw: 0.7, rest: true },
+    chair: { p: [-1.3, 1.64, -1.7], yaw: 0.6, rest: true },
+    rug: { p: [0.6, 0.04, -0.2], yaw: 0.8, rest: true },
+    floorB: { p: [-2.8, 0.04, -1.9] },
+    floorC: { p: [-3.5, 0, 1.3] },
+    shelf0: { p: [-4.55, 2.3, 1.85], yaw: Math.PI / 2, rest: true },
+    shelf1: { p: [-4.55, 3.55, 1.85] },
+    shelf2: { p: [-4.55, 4.8, 2.0], yaw: Math.PI / 2, rest: true },
+  };
+  const LINKS = [["sillA", "sillB"], ["sillA", "deskR"], ["deskR", "deskL"], ["deskR", "rug"], ["deskL", "floorB"], ["rug", "floorB"],
+    ["rug", "chair"], ["floorB", "chair"], ["floorB", "floorC"], ["floorC", "shelf0"], ["shelf0", "shelf1"], ["shelf1", "shelf2"]];
+  for (const k in SPOTS) { SPOTS[k].v = new THREE.Vector3(...SPOTS[k].p); SPOTS[k].n = []; }
+  LINKS.forEach(([a, b]) => { SPOTS[a].n.push(b); SPOTS[b].n.push(a); });
+  const RESTS = Object.keys(SPOTS).filter((k) => SPOTS[k].rest);
+  function route(from, to) {
+    const prev = { [from]: null }, q = [from];
+    while (q.length) { const c = q.shift(); if (c === to) break; for (const n of SPOTS[c].n) if (!(n in prev)) { prev[n] = c; q.push(n); } }
+    const path = []; for (let c = to; c; c = prev[c]) path.unshift(c);
+    return path;
+  }
+  const angleDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+  const mood = { mode: "rest", at: "sillA", next: performance.now() + 7000, yaw: SPOTS.sillA.yaw };
+  let stand = 0, stretchP = 0, walkPh = 0, land = 0;
+  const legFrom = new THREE.Vector3(), legCtrl = new THREE.Vector3(), legTo = new THREE.Vector3();
+  function startLeg() {
+    const to = mood.path[mood.i + 1];
+    legFrom.copy(cat.position); legTo.copy(SPOTS[to].v);
+    const dy = legTo.y - legFrom.y, flat = Math.hypot(legTo.x - legFrom.x, legTo.z - legFrom.z);
+    mood.jump = Math.abs(dy) > 0.15;
+    mood.t = 0; mood.phase = "turn";
+    mood.dur = mood.jump ? 0.55 + Math.hypot(flat, dy) * 0.09 : Math.max(0.2, flat / 0.6);
+    legCtrl.copy(legFrom).add(legTo).multiplyScalar(0.5);
+    legCtrl.y = Math.max(legFrom.y, legTo.y) + 0.5 + flat * 0.12;
+    if (mood.path[mood.i].startsWith("shelf") && to.startsWith("shelf")) legCtrl.x += 1.6; // hop out around the shelf board
+    mood.yaw = flat > 0.25 ? Math.atan2(legTo.x - legFrom.x, legTo.z - legFrom.z) : Math.PI / 2;
+  }
+  function goTo(name) {
+    const path = route(mood.at, name);
+    if (path.length < 2) return;
+    Object.assign(mood, { mode: "travel", path, i: 0 });
+    startLeg();
+  }
+  function settle() { if (mood.mode === "stretch") { mood.mode = "rest"; stretchP = 0; mood.next = performance.now() + 12000; } }
+
+  // ---- Picking Mochi up and putting her somewhere else ----
+  const dragPlane = new THREE.Plane(), dragHit = new THREE.Vector3(), camDir = new THREE.Vector3();
+  const DROP_LINES = ["Hmph. Fine, I'll sit here.", "Mrrow! Warn me next time.", "Oh. Nice spot, actually.", "I meant to come here anyway."];
+  let dropN = 0;
+  function startCatDrag() {
+    mood.mode = "drag"; stretchP = 0; catSleep = 0; catLast = performance.now();
+    camera.getWorldDirection(camDir); cat.getWorldPosition(dragHit);
+    dragPlane.setFromNormalAndCoplanarPoint(camDir, dragHit);
+    meow(true);
+  }
+  function moveCatDrag() {
+    ray.setFromCamera(pointerNdc, camera);
+    if (!ray.ray.intersectPlane(dragPlane, dragHit)) return;
+    room.worldToLocal(dragHit);
+    cat.position.set(dragHit.x, Math.max(0, dragHit.y - 0.45), dragHit.z);
+  }
+  function dropCat() {
+    let best = "sillA", bd = Infinity;
+    for (const k in SPOTS) {
+      const v = SPOTS[k].v;
+      const d = Math.hypot(v.x - cat.position.x, v.z - cat.position.z) + Math.max(0, v.y - cat.position.y) * 0.6 + Math.max(0, cat.position.y - v.y) * 0.25;
+      if (d < bd) { bd = d; best = k; }
+    }
+    Object.assign(mood, { mode: "travel", path: ["_drop", best], i: 0 });
+    startLeg();
+    legCtrl.copy(legFrom).add(legTo).multiplyScalar(0.5);
+    legCtrl.y = Math.max(legFrom.y, legTo.y + 0.4);
+    Object.assign(mood, { phase: "air", t: 0, dur: 0.3 + legFrom.distanceTo(legTo) * 0.08, yaw: cat.rotation.y });
+    mood.dropped = true;
+    ui.poke && ui.poke("cat-drag", best);
+  }
+  function petCat(say = true) {
+    settle(); purr();
+    catHappy = 1; catLast = performance.now(); catPuff(heartTex, 3);
+    if (say) bubbleAt(catHead, PURR_LINES[petN++ % PURR_LINES.length]);
+    ui.poke && ui.poke("cat-pet");
+  }
+
   // ---- Lights ----
   const hemi = new THREE.HemisphereLight(0xfff4e8, 0xb9a6d6, 1.6);
   scene.add(hemi);
@@ -416,6 +576,7 @@ export function startScene(canvas, ui) {
     sun.color.set(n ? 0x9fb0ff : 0xffd8b0);
     const { ctx, canvas: c } = skyTex.userData; drawSky(ctx, c.width, c.height, n); skyTex.needsUpdate = true;
     bulb.material.color.set(n ? 0xfff1c4 : 0xd9d4e6);
+    eyeMat.color.set(n ? 0xc8f26a : 0x1c1a2e);
     if (reduced || firstTheme) Object.assign(light, target);
     firstTheme = false;
     dirty = true;
@@ -455,8 +616,23 @@ export function startScene(canvas, ui) {
     const h = ray.intersectObjects(clickables, true)[0];
     return h ? h.object : null;
   };
-  canvas.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, rot: rotTarget, moved: false }; });
+  let catGrab = null;
+  canvas.addEventListener("pointerdown", (e) => {
+    catLast = performance.now();
+    const o = hits(e);
+    if (o && o.userData.id === "cat" && !reduced) {
+      catGrab = { x: e.clientX, y: e.clientY, moved: false }; drag = null;
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      return;
+    }
+    drag = { x: e.clientX, y: e.clientY, rot: rotTarget, moved: false };
+  });
   window.addEventListener("pointerup", (e) => {
+    if (catGrab) {
+      const g = catGrab; catGrab = null; canvas.style.cursor = "pointer";
+      if (g.moved) dropCat(); else act("cat", {});
+      return;
+    }
     if (drag && !drag.moved) {
       const o = hits(e);
       if (o) { act(o.userData.id, o.userData); }
@@ -465,6 +641,13 @@ export function startScene(canvas, ui) {
   });
   canvas.addEventListener("pointermove", (e) => {
     const r = canvas.getBoundingClientRect();
+    pointerNdc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    catLast = performance.now();
+    if (catGrab) {
+      if (!catGrab.moved && Math.hypot(e.clientX - catGrab.x, e.clientY - catGrab.y) > 6) { catGrab.moved = true; startCatDrag(); }
+      if (catGrab.moved) { moveCatDrag(); ui.tip(null); canvas.style.cursor = "grabbing"; }
+      return;
+    }
     tiltTarget = ((e.clientY - r.top) / r.height - 0.5) * 0.12;
     if (drag) {
       const dx = e.clientX - drag.x;
@@ -476,7 +659,15 @@ export function startScene(canvas, ui) {
     if (e.pointerType === "mouse") rotTarget += (((e.clientX - r.left) / r.width - 0.5) * 0.25 - rotTarget) * 0.04;
     const o = hits(e);
     const id = o ? o.userData.id : null;
-    if (id !== hovered) { hovered = id; canvas.style.cursor = id ? "pointer" : "grab"; }
+    if (id !== hovered) {
+      if (id === "cat" && catSleep < 0.5 && Math.random() < 0.6) catSwat = 1;
+      if (id !== "cat") stroke = 0;
+      hovered = id; canvas.style.cursor = id ? "pointer" : "grab";
+    }
+    if (id === "cat" && e.pointerType === "mouse") {
+      stroke += Math.hypot(e.movementX || 0, e.movementY || 0);
+      if (stroke > 260) { stroke = 0; petCat(); }
+    }
     ui.tip(o ? o.userData.label : null, e.clientX - r.left, e.clientY - r.top);
   });
   canvas.addEventListener("pointerleave", () => { ui.tip(null); hovered = null; });
@@ -498,6 +689,10 @@ export function startScene(canvas, ui) {
     if (id === "money") { moneyWiggle = 1; bubbleAt(bottle, "Money plant, growing in a bottle. Still waiting on the money."); }
     if (id === "book" && data.root) { const r = data.root; r.userData.pop = 1; bubbleAt(r, data.quip); }
     if (id === "lamp") { ui.toggleTheme(); }
+    if (id === "cat") {
+      if (catSleep > 0.5) { bubbleAt(catHead, "Mrrp? I was napping."); meow(true); } else meow();
+      catSleep = 0; petCat(false); ui.openCat && ui.openCat();
+    }
     if (id === "monitor") { burst = performance.now() + 1500; ui.goto("#projects"); }
     if (id === "poster") bubbleAt(poster, "Japan is top of my travel list.");
     if (id === "window") bubbleAt(sky, night ? "Dhaka, after midnight." : "Dhaka, around 6pm.");
@@ -574,6 +769,93 @@ export function startScene(canvas, ui) {
         b.userData.pop *= 0.9; if (b.userData.pop < 0.01) b.userData.pop = 0;
         b.position.x = (b.userData.homeX ??= b.position.x) + Math.sin(b.userData.pop * Math.PI) * 0.35;
       });
+      // Mochi: wander, jump, stretch, get carried around
+      const idle = (now - catLast) / 1000;
+      const chatting = !!(ui.catOpen && ui.catOpen());
+      const sleepTarget = idle > 22 && !chatting && mood.mode === "rest" ? 1 : 0;
+      if (mood.mode === "rest" && now > mood.next && catSleep < 0.2 && catHappy < 0.2 && !chatting) {
+        if (mood.stretchAfter || Math.random() < 0.3) { mood.stretchAfter = false; Object.assign(mood, { mode: "stretch", t: 0 }); }
+        else { let to; do { to = RESTS[Math.floor(Math.random() * RESTS.length)]; } while (to === mood.at); goTo(to); }
+      }
+      if (mood.mode === "travel") {
+        if (mood.phase === "turn" && stand > 0.85 && Math.abs(angleDiff(mood.yaw, cat.rotation.y)) < 0.25) { mood.phase = mood.jump ? "crouch" : "walk"; mood.t = 0; }
+        else if (mood.phase === "crouch") { mood.t += dt; if (mood.t > 0.3) { mood.phase = "air"; mood.t = 0; } }
+        else if (mood.phase === "walk" || mood.phase === "air") {
+          mood.t += dt;
+          const u = Math.min(1, mood.t / mood.dur);
+          if (mood.phase === "walk") {
+            cat.position.lerpVectors(legFrom, legTo, u); walkPh += dt * 10;
+            const p = cat.position; // walking across the keyboard types a little
+            if (p.y > 2.5 && p.y < 2.7 && p.x > -2.3 && p.x < -0.4) burst = now + 250;
+          } else {
+            cat.position.set(0, 0, 0).addScaledVector(legFrom, (1 - u) * (1 - u)).addScaledVector(legCtrl, 2 * u * (1 - u)).addScaledVector(legTo, u * u);
+            const vy = 2 * (1 - u) * (legCtrl.y - legFrom.y) + 2 * u * (legTo.y - legCtrl.y);
+            mood.pitch = THREE.MathUtils.clamp(-vy * 0.12, -0.6, 0.6);
+          }
+          if (u >= 1) {
+            if (mood.phase === "air") land = 1;
+            mood.pitch = 0; mood.i++;
+            if (mood.i >= mood.path.length - 1) {
+              const at = mood.path[mood.i];
+              if (mood.dropped) { mood.dropped = false; bubbleAt(catHead, DROP_LINES[dropN++ % DROP_LINES.length]); }
+              Object.assign(mood, { mode: "rest", at, yaw: SPOTS[at].yaw ?? cat.rotation.y, next: now + 9000 + Math.random() * 12000, stretchAfter: Math.random() < 0.35 });
+            } else startLeg();
+          }
+        }
+      } else mood.pitch = 0;
+      if (mood.mode === "rest") mood.yaw = SPOTS[mood.at].yaw ?? mood.yaw;
+      if (mood.mode === "stretch") {
+        mood.t += dt; stretchP = Math.sin(Math.min(1, mood.t / 2.6) * Math.PI);
+        if (mood.t > 2.6) { stretchP = 0; mood.mode = "rest"; mood.next = now + 10000 + Math.random() * 10000; }
+      }
+      const standT = mood.mode === "drag" ? 1 : mood.mode === "stretch" ? 0.6 : mood.mode === "travel" ? (mood.phase === "crouch" ? 0.45 : 1) : 0;
+      stand += (standT - stand) * (1 - Math.exp(-dt * (mood.phase === "crouch" ? 10 : 4)));
+      if (mood.mode !== "drag") cat.rotation.y += angleDiff(mood.yaw, cat.rotation.y) * (1 - Math.exp(-dt * 6));
+      land *= 0.88;
+      const inAir = mood.mode === "travel" && mood.phase === "air" ? 1 : 0;
+      const walking = mood.mode === "travel" && mood.phase === "walk" ? 1 : 0;
+      const dangling = mood.mode === "drag" ? 1 : 0;
+      catBody.position.y = stand * 0.18 + Math.abs(Math.sin(walkPh)) * 0.015 * walking - land * 0.07;
+      catBody.rotation.x = stretchP * 0.3 + (mood.pitch || 0);
+      torso.scale.z = 1.35 * (1 + stretchP * 0.15 + inAir * 0.12);
+      legs.forEach((l) => {
+        l.scale.y = Math.max(0.02, stand);
+        const f = l.userData.front;
+        l.rotation.x = Math.sin(walkPh + l.userData.phase) * 0.55 * walking - (f ? stretchP * 1.1 : 0)
+          + inAir * (f ? -0.8 : 0.8) + dangling * Math.sin(now / 140 + l.userData.phase) * 0.35;
+      });
+      paws.forEach((p) => p.scale.setScalar(Math.max(0.01, 1 - stand * 1.5)));
+      tailJoints[0].rotation.x = -0.3 + stand * 1.3 - dangling * 1.6;
+      catSleep += (sleepTarget - catSleep) * (1 - Math.exp(-dt * (sleepTarget ? 0.7 : 6)));
+      const awake = 1 - catSleep;
+      catHead.getWorldPosition(worldPos); worldPos.project(camera);
+      const yawT = THREE.MathUtils.clamp((pointerNdc.x - worldPos.x) * 1.1, -0.5, 0.5) * awake * (1 - stand * 0.7);
+      const pitchT = THREE.MathUtils.clamp(-(pointerNdc.y - worldPos.y) * 1.1, -0.35, 0.3) * awake * (1 - stand * 0.7) + catSleep * 0.45 - stretchP * 0.6;
+      catHead.rotation.y += (yawT - catHead.rotation.y) * k2;
+      catHead.rotation.x += (pitchT - catHead.rotation.x) * k2;
+      catHead.rotation.z = Math.sin(now / 140) * 0.08 * catHappy + catSleep * 0.18 + Math.sin(now / 90) * 0.05 * catChatter;
+      catHead.position.y = 0.43 - catSleep * 0.08 + Math.abs(Math.sin(now / 110)) * 0.02 * catChatter;
+      torso.scale.y = 0.7 * (1 + Math.sin(now / (catSleep > 0.5 ? 1100 : 650)) * 0.025) + Math.sin(now / 22) * 0.006 * catHappy;
+      if (now > nextBlink) { blinkAt = now; nextBlink = now + 2500 + Math.random() * 4000; }
+      const lid = Math.min(now - blinkAt < 130 ? 0.1 : 1, 1 - 0.88 * Math.max(catSleep, catHappy * 0.95));
+      eyes.forEach((e) => { e.scale.y = Math.max(0.08, lid); });
+      const amp = 0.08 + awake * 0.06 + catHappy * 0.25 + catChatter * 0.3;
+      const tempo = catSleep > 0.5 ? 1500 : 520;
+      tailJoints.forEach((j, i) => { j.rotation.y = j.userData.base + Math.sin(now / tempo - i * 0.7) * amp * (i / 6 + 0.3); });
+      if (catSwat > 0.01 && stand < 0.1) {
+        catSwat *= 0.93; const a = Math.sin((1 - catSwat) * Math.PI);
+        pawR.position.set(0.11, 0.04 + a * 0.2, 0.42 + a * 0.1); pawR.rotation.x = -a * 0.8;
+      } else if (catSwat) { catSwat = 0; pawR.position.set(0.11, 0.04, 0.42); pawR.rotation.x = 0; }
+      catHappy *= 0.985; catChatter *= 0.965;
+      if (catSleep > 0.8 && now > zAt) { zAt = now + 1400; catPuff(zTex, 1); }
+      for (let i = catFx.length - 1; i >= 0; i--) {
+        const s = catFx[i], u = s.userData; u.t += dt;
+        if (u.t < 0) continue;
+        s.visible = true;
+        s.position.set(u.vx * u.t + Math.sin(u.t * 4 + u.ph) * 0.05, 0.62 + u.t * 0.45, 0.3);
+        s.material.opacity = Math.max(0, 1 - u.t / 1.6);
+        if (u.t > 1.6) { cat.remove(s); s.material.dispose(); catFx.splice(i, 1); }
+      }
       if (plantWiggle > 0.01) { plantWiggle *= 0.95; plant.rotation.z = Math.sin(now / 60) * 0.12 * plantWiggle; }
       renderer.render(scene, camera);
     } else if (dirty) {
@@ -588,5 +870,6 @@ export function startScene(canvas, ui) {
   return {
     setNight,
     setProgress(v) { progTarget = v; dirty = true; },
+    catTalk() { catChatter = 1; catLast = performance.now(); },
   };
 }
