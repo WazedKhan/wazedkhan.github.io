@@ -1,7 +1,7 @@
 // Wazed's desk in Dhaka, as a little Three.js diorama.
 // Drag to look around, click objects, scroll to fly into the monitor.
 import * as THREE from "three";
-import { purr, meow } from "./cat-sound.js";
+import { purr, meow, walking as walkSound, eating as eatSound } from "./cat-sound.js";
 
 const CODE = `package main
 
@@ -448,6 +448,22 @@ export function startScene(canvas, ui) {
   }
   tag(cat, "cat", "Mochi. Click to chat, stroke to pet, drag to move");
 
+  // ---- Mochi's food bowl ----
+  const bowl = new THREE.Group(); room.add(bowl);
+  bowl.position.set(1.6, 0, 1.15);
+  cyl(0.34, 0.27, 0.16, 0x5bb8b0, 0, 0.08, 0, bowl, 24);
+  const bowlIn = cyl(0.28, 0.28, 0.02, 0x2f6f6a, 0, 0.155, 0, bowl, 24); bowlIn.castShadow = false;
+  const kibbleMat = mat(0x9a5b2e);
+  const kibble = [];
+  for (let i = 0; i < 9; i++) {
+    const k = new THREE.Mesh(new THREE.DodecahedronGeometry(0.055, 0), kibbleMat);
+    const a = (i / 9) * Math.PI * 2, r = i % 3 === 0 ? 0.04 : 0.15;
+    k.position.set(Math.cos(a) * r, 0.19 + (i % 2) * 0.03, Math.sin(a) * r); k.rotation.set(i, i * 2, 0);
+    k.visible = false; bowl.add(k); kibble.push(k);
+  }
+  tag(bowl, "bowl", "Mochi's bowl. Click to feed her");
+  let bowlWiggle = 0;
+
   // little floating hearts and z's
   const glyphTex = (draw) => canvasTex(64, 64, (c, w, h) => draw(c, w, h));
   const zTex = glyphTex((c, w, h) => { c.fillStyle = "#6b6be0"; c.font = "800 50px 'Bricolage Grotesque', sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("z", w / 2, h / 2); });
@@ -473,14 +489,15 @@ export function startScene(canvas, ui) {
     deskL: { p: [-3.2, 2.58, -3.55], yaw: 0.7, rest: true },
     chair: { p: [-1.3, 1.64, -1.7], yaw: 0.6, rest: true },
     rug: { p: [0.6, 0.04, -0.2], yaw: 0.8, rest: true },
+    bowl: { p: [1.6, 0, 0.5], yaw: 0 },
     floorB: { p: [-2.8, 0.04, -1.9] },
     floorC: { p: [-3.5, 0, 1.3] },
-    shelf0: { p: [-4.55, 2.3, 1.85], yaw: Math.PI / 2, rest: true },
-    shelf1: { p: [-4.55, 3.55, 1.85] },
-    shelf2: { p: [-4.55, 4.8, 2.0], yaw: Math.PI / 2, rest: true },
+    shelf0: { p: [-4.45, 2.3, 1.85], yaw: 0.3, rest: true },
+    shelf1: { p: [-4.45, 3.55, 1.85] },
+    shelf2: { p: [-4.45, 4.8, 2.0], yaw: 0.3, rest: true },
   };
   const LINKS = [["sillA", "sillB"], ["sillA", "deskR"], ["deskR", "deskL"], ["deskR", "rug"], ["deskL", "floorB"], ["rug", "floorB"],
-    ["rug", "chair"], ["floorB", "chair"], ["floorB", "floorC"], ["floorC", "shelf0"], ["shelf0", "shelf1"], ["shelf1", "shelf2"]];
+    ["rug", "chair"], ["rug", "bowl"], ["floorB", "chair"], ["floorB", "floorC"], ["floorC", "shelf0"], ["shelf0", "shelf1"], ["shelf1", "shelf2"]];
   for (const k in SPOTS) { SPOTS[k].v = new THREE.Vector3(...SPOTS[k].p); SPOTS[k].n = []; }
   LINKS.forEach(([a, b]) => { SPOTS[a].n.push(b); SPOTS[b].n.push(a); });
   const RESTS = Object.keys(SPOTS).filter((k) => SPOTS[k].rest);
@@ -493,6 +510,20 @@ export function startScene(canvas, ui) {
   const angleDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
   const mood = { mode: "rest", at: "sillA", next: performance.now() + 7000, yaw: SPOTS.sillA.yaw };
   let stand = 0, stretchP = 0, walkPh = 0, land = 0;
+  let eatP = 0, hungry = false, askedFood = false, fedThisVisit = false, visitorLast = performance.now();
+  const pageStart = performance.now();
+  try { askedFood = sessionStorage.getItem("mochi-asked") === "1"; fedThisVisit = sessionStorage.getItem("mochi-fed") === "1"; } catch (e) {}
+  ["pointermove", "keydown", "scroll", "touchstart"].forEach((ev) => window.addEventListener(ev, () => { visitorLast = performance.now(); }, { passive: true }));
+  function feedMochi() {
+    kibble.forEach((k) => { k.visible = true; });
+    bowlWiggle = 1; fedThisVisit = true; askedFood = true; catSleep = 0; catLast = performance.now();
+    try { sessionStorage.setItem("mochi-fed", "1"); } catch (e) {}
+    if (!(mood.mode === "eat")) {
+      if (mood.at !== "bowl" || mood.mode !== "rest") bubbleAt(bowl, hungry ? "Food!" : "Did someone say food?");
+      meow(true);
+      goTo("bowl", () => Object.assign(mood, { mode: "eat", t: 0, bite: 0.6 }));
+    }
+  }
   const legFrom = new THREE.Vector3(), legCtrl = new THREE.Vector3(), legTo = new THREE.Vector3();
   function startLeg() {
     const to = mood.path[mood.i + 1];
@@ -506,10 +537,13 @@ export function startScene(canvas, ui) {
     if (mood.path[mood.i].startsWith("shelf") && to.startsWith("shelf")) legCtrl.x += 1.6; // hop out around the shelf board
     mood.yaw = flat > 0.25 ? Math.atan2(legTo.x - legFrom.x, legTo.z - legFrom.z) : Math.PI / 2;
   }
-  function goTo(name) {
+  function goTo(name, onArrive = null) {
+    if (mood.mode === "travel" || mood.mode === "drag") { mood.queued = [name, onArrive]; return; }
+    if (mood.mode === "stretch") { mood.mode = "rest"; stretchP = 0; }
+    if (mood.at === name) { mood.mode = "rest"; if (onArrive) onArrive(); return; }
     const path = route(mood.at, name);
     if (path.length < 2) return;
-    Object.assign(mood, { mode: "travel", path, i: 0 });
+    Object.assign(mood, { mode: "travel", path, i: 0, onArrive });
     startLeg();
   }
   function settle() { if (mood.mode === "stretch") { mood.mode = "rest"; stretchP = 0; mood.next = performance.now() + 12000; } }
@@ -528,7 +562,8 @@ export function startScene(canvas, ui) {
     ray.setFromCamera(pointerNdc, camera);
     if (!ray.ray.intersectPlane(dragPlane, dragHit)) return;
     room.worldToLocal(dragHit);
-    cat.position.set(dragHit.x, Math.max(0, dragHit.y - 0.45), dragHit.z);
+    // keep her inside the room: walls are at x = -5 and z = -5, the floor ends at +5
+    cat.position.set(THREE.MathUtils.clamp(dragHit.x, -4.4, 4.5), THREE.MathUtils.clamp(dragHit.y - 0.45, 0, 6.2), THREE.MathUtils.clamp(dragHit.z, -4.45, 4.5));
   }
   function dropCat() {
     let best = "sillA", bd = Infinity;
@@ -674,10 +709,10 @@ export function startScene(canvas, ui) {
 
   let duckHop = 0, mugPuff = 0, plantWiggle = 0;
   const worldPos = new THREE.Vector3();
-  function bubbleAt(obj, text) {
+  function bubbleAt(obj, text, ms) {
     obj.getWorldPosition(worldPos); worldPos.y += 0.7; worldPos.project(camera);
     const r = canvas.getBoundingClientRect();
-    ui.bubble(text, (worldPos.x * 0.5 + 0.5) * r.width, (-worldPos.y * 0.5 + 0.5) * r.height);
+    ui.bubble(text, (worldPos.x * 0.5 + 0.5) * r.width, (-worldPos.y * 0.5 + 0.5) * r.height, ms);
   }
   const DUCK_LINES = ["Have you tried explaining it out loud?", "Quack. Check the logs.", "It's always DNS. Or a missing index.", "Did you add a test for that?"];
   let duckN = 0, moneyWiggle = 0;
@@ -689,6 +724,7 @@ export function startScene(canvas, ui) {
     if (id === "money") { moneyWiggle = 1; bubbleAt(bottle, "Money plant, growing in a bottle. Still waiting on the money."); }
     if (id === "book" && data.root) { const r = data.root; r.userData.pop = 1; bubbleAt(r, data.quip); }
     if (id === "lamp") { ui.toggleTheme(); }
+    if (id === "bowl") feedMochi();
     if (id === "cat") {
       if (catSleep > 0.5) { bubbleAt(catHead, "Mrrp? I was napping."); meow(true); } else meow();
       catSleep = 0; petCat(false); ui.openCat && ui.openCat();
@@ -722,7 +758,7 @@ export function startScene(canvas, ui) {
 
   function frame(now) {
     requestAnimationFrame(frame);
-    if (!visible || document.hidden) { last = now; return; }
+    if (!visible || document.hidden) { last = now; walkSound(false); eatSound(false); return; }
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
 
     const k = reduced ? 1 : 1 - Math.exp(-dt * 7);
@@ -799,6 +835,9 @@ export function startScene(canvas, ui) {
               const at = mood.path[mood.i];
               if (mood.dropped) { mood.dropped = false; bubbleAt(catHead, DROP_LINES[dropN++ % DROP_LINES.length]); }
               Object.assign(mood, { mode: "rest", at, yaw: SPOTS[at].yaw ?? cat.rotation.y, next: now + 9000 + Math.random() * 12000, stretchAfter: Math.random() < 0.35 });
+              const cb = mood.onArrive, q = mood.queued; mood.onArrive = null; mood.queued = null;
+              if (cb) cb();
+              if (q) goTo(q[0], q[1]);
             } else startLeg();
           }
         }
@@ -808,6 +847,37 @@ export function startScene(canvas, ui) {
         mood.t += dt; stretchP = Math.sin(Math.min(1, mood.t / 2.6) * Math.PI);
         if (mood.t > 2.6) { stretchP = 0; mood.mode = "rest"; mood.next = now + 10000 + Math.random() * 10000; }
       }
+      // eating
+      if (mood.mode === "eat") {
+        mood.t += dt; mood.yaw = 0;
+        if (mood.t > mood.bite) {
+          mood.bite += 0.5;
+          const k = kibble.find((x) => x.visible); if (k) k.visible = false;
+          if (!kibble.some((x) => x.visible)) {
+            Object.assign(mood, { mode: "rest", next: now + 15000 });
+            hungry = false; petCat(false); bubbleAt(catHead, "Thank you, human. Wazed would approve.", 4000);
+          }
+        }
+      }
+      eatP += ((mood.mode === "eat" ? 1 : 0) - eatP) * (1 - Math.exp(-dt * 6));
+      eatSound(mood.mode === "eat");
+      walkSound(mood.mode === "travel" && mood.phase === "walk");
+      // once per visit: if the visitor sits idle at the top, Mochi asks for food
+      if (!askedFood && !fedThisVisit && now - pageStart > 20000 && now - visitorLast > 12000 && progTarget < 0.05
+          && !chatting && mood.mode === "rest" && catSleep < 0.5 && !document.hidden) {
+        askedFood = true; catLast = now;
+        try { sessionStorage.setItem("mochi-asked", "1"); } catch (e) {}
+        goTo("bowl", () => {
+          if (kibble.some((k) => k.visible)) return;
+          hungry = true; mood.next = now + 40000; bowlWiggle = 1; catLast = performance.now();
+          meow(); bubbleAt(catHead, "Mrrow... my bowl is empty. Click it?", 7000);
+        });
+      }
+      if (hungry) bowlWiggle = Math.max(bowlWiggle, 0.35);
+      if (bowlWiggle > 0.01) { bowl.rotation.z = Math.sin(now / 70) * 0.06 * bowlWiggle; bowlWiggle *= 0.985; } else bowl.rotation.z = 0;
+      const chairBound = (mood.at === "chair" && mood.mode !== "travel" && mood.mode !== "drag")
+        || (mood.mode === "travel" && mood.path[mood.path.length - 1] === "chair");
+      chair.rotation.y += ((chairBound ? 0.35 + Math.PI : 0.35) - chair.rotation.y) * (1 - Math.exp(-dt * 3));
       const standT = mood.mode === "drag" ? 1 : mood.mode === "stretch" ? 0.6 : mood.mode === "travel" ? (mood.phase === "crouch" ? 0.45 : 1) : 0;
       stand += (standT - stand) * (1 - Math.exp(-dt * (mood.phase === "crouch" ? 10 : 4)));
       if (mood.mode !== "drag") cat.rotation.y += angleDiff(mood.yaw, cat.rotation.y) * (1 - Math.exp(-dt * 6));
@@ -829,8 +899,8 @@ export function startScene(canvas, ui) {
       catSleep += (sleepTarget - catSleep) * (1 - Math.exp(-dt * (sleepTarget ? 0.7 : 6)));
       const awake = 1 - catSleep;
       catHead.getWorldPosition(worldPos); worldPos.project(camera);
-      const yawT = THREE.MathUtils.clamp((pointerNdc.x - worldPos.x) * 1.1, -0.5, 0.5) * awake * (1 - stand * 0.7);
-      const pitchT = THREE.MathUtils.clamp(-(pointerNdc.y - worldPos.y) * 1.1, -0.35, 0.3) * awake * (1 - stand * 0.7) + catSleep * 0.45 - stretchP * 0.6;
+      const yawT = THREE.MathUtils.clamp((pointerNdc.x - worldPos.x) * 1.1, -0.5, 0.5) * awake * (1 - stand * 0.7) * (1 - eatP);
+      const pitchT = THREE.MathUtils.clamp(-(pointerNdc.y - worldPos.y) * 1.1, -0.35, 0.3) * awake * (1 - stand * 0.7) + catSleep * 0.45 - stretchP * 0.6 + eatP * (0.6 + Math.sin(now / 110) * 0.12);
       catHead.rotation.y += (yawT - catHead.rotation.y) * k2;
       catHead.rotation.x += (pitchT - catHead.rotation.x) * k2;
       catHead.rotation.z = Math.sin(now / 140) * 0.08 * catHappy + catSleep * 0.18 + Math.sin(now / 90) * 0.05 * catChatter;

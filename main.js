@@ -32,17 +32,17 @@ const ui = {
     tip.style.left = x + "px"; tip.style.top = y + "px";
     tip.classList.add("on");
   },
-  bubble(text, x, y) {
+  bubble(text, x, y, ms = 2600) {
     bubble.textContent = text;
     bubble.style.left = Math.min(x, heroSticky.clientWidth - 250) + "px";
     bubble.style.top = Math.max(80, y) + "px";
     bubble.classList.add("on");
     clearTimeout(bubbleTimer);
-    bubbleTimer = setTimeout(() => bubble.classList.remove("on"), 2600);
+    bubbleTimer = setTimeout(() => bubble.classList.remove("on"), ms);
   },
   toggleTheme,
   poke(id, label) {
-    const names = { cat: "🐱 Mochi the cat (chat opened)", "cat-pet": "🐱 Petted Mochi", duck: "🦆 Rubber duck", mug: "🍵 Tea mug", plant: "🌵 Cactus", money: "🌿 Money plant", lamp: "💡 Lamp (day/night)", monitor: "🖥️ Monitor (jumped to projects)", poster: "🗻 Tokyo poster", window: "🪟 Window" };
+    const names = { bowl: "🥣 Fed Mochi", "cat-drag": "🐱 Moved Mochi", cat: "🐱 Mochi the cat (chat opened)", "cat-pet": "🐱 Petted Mochi", duck: "🦆 Rubber duck", mug: "🍵 Tea mug", plant: "🌵 Cactus", money: "🌿 Money plant", lamp: "💡 Lamp (day/night)", monitor: "🖥️ Monitor (jumped to projects)", poster: "🗻 Tokyo poster", window: "🪟 Window" };
     const what = id === "book" ? `📚 Book: ${label}` : names[id] || id;
     window.trackEvent && window.trackEvent(`Desk: ${what}`);
   },

@@ -52,7 +52,7 @@ const INTENTS = [
   { id: "location", k: ["where", "location", "live", "based", "dhaka", "bangladesh", "timezone", "time zone"],
     a: ["He's in Dhaka, Bangladesh (UTC+6), working remotely. That's the Dhaka skyline out the window. Well, a drawing of it."] },
   { id: "food", w: 1.5, k: ["food", "fish", "treat", "tuna", "hungry", "eat", "milk", "breakfast"],
-    a: ["Fish, please. Wazed says I've already had breakfast. Wazed is lying.", "Treats are accepted at any time. Wazed keeps them in the second drawer. You didn't hear that from me."] },
+    a: ["Fish, please. Or click my bowl on the floor. Wazed says I've already had breakfast. Wazed is lying.", "Treats are accepted at any time. Wazed keeps them in the second drawer. You didn't hear that from me."] },
   { id: "meow", w: 1.5, k: ["meow", "mew", "purr", "nya", "nyan"],
     a: ["Meow meow. (Translation: hire Wazed, he refills my water bowl on time.)", "Mrrrrow."] },
   { id: "love", w: 1.5, k: ["cute", "good kitty", "good cat", "love you", "pet", "adorable", "sweet"],
