@@ -51,6 +51,21 @@
         <div class="tip" role="status"></div>
         <div class="bubble" role="status"></div>
 
+        <aside class="cat-chat" id="cat-chat" aria-label="Chat with Mochi, the desk cat" hidden>
+          <header class="cat-chat-head">
+            <svg class="cat-chat-face" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><path d="M8 14 L10 4 L17 10 H23 L30 4 L32 14 C35 18 35 30 20 33 C5 30 5 18 8 14Z" fill="#f0a05a"/><circle cx="15" cy="20" r="2.2" fill="#1c1a2e"/><circle cx="25" cy="20" r="2.2" fill="#1c1a2e"/><path d="M18.5 24 h3 l-1.5 1.6z" fill="#ff9aa8"/></svg>
+            <div><strong>Mochi</strong><span>desk cat, knows a bit about Wazed</span></div>
+            <button type="button" class="cat-chat-x cat-chat-snd" aria-label="Mute Mochi" aria-pressed="false"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+            <button type="button" class="cat-chat-x" aria-label="Close chat">&times;</button>
+          </header>
+          <div class="cat-chat-log" role="log" aria-live="polite"></div>
+          <div class="cat-chat-chips"></div>
+          <form class="cat-chat-form">
+            <input type="text" name="q" maxlength="200" placeholder="Ask Mochi something" autocomplete="off" aria-label="Your question for Mochi" />
+            <button type="submit" aria-label="Send"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 12 L20 4 L14 20 L11.5 13 Z" fill="currentColor"/></svg></button>
+          </form>
+        </aside>
+
         <div class="hero-copy">
           <p class="hero-wave">Hi, I'm Wazed <span class="wave" aria-hidden="true">👋</span></p>
           <h1>I build the backend bits you never notice, until they break.</h1>
@@ -61,7 +76,7 @@
           </div>
         </div>
 
-        <p class="hero-hint"><span class="hand">drag to look around, click anything on the desk</span>
+        <p class="hero-hint"><span class="hand">drag to look around, click anything on the desk. The cat talks.</span>
           <svg viewBox="0 0 60 40" width="54" height="36" aria-hidden="true"><path d="M4 6 C 20 4, 40 10, 50 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M42 27 L 51 32 L 53 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </p>
         <p class="scroll-cue" aria-hidden="true"><span></span>scroll to zoom in</p>
