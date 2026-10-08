@@ -491,7 +491,7 @@ export function startScene(canvas, ui) {
   const DUCK_LINES = ["Have you tried explaining it out loud?", "Quack. Check the logs.", "It's always DNS. Or a missing index.", "Did you add a test for that?"];
   let duckN = 0, moneyWiggle = 0;
   function act(id, data = {}) {
-    ui.poke && ui.poke(id);
+    ui.poke && ui.poke(id, data.label);
     if (id === "duck") { duckHop = 1; bubbleAt(duck, DUCK_LINES[duckN++ % DUCK_LINES.length]); }
     if (id === "mug") { mugPuff = 1; bubbleAt(mug, "Milk tea. Fuel for debugging."); }
     if (id === "plant") { plantWiggle = 1; bubbleAt(plant, "A cactus. Low maintenance, high uptime."); }
