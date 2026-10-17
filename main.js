@@ -1,6 +1,6 @@
-import { reply as catReply, GREETING, SUGGESTIONS } from "./cat-brain.js?v=a7e25bf";
-import { isMuted, setMuted, meow } from "./cat-sound.js?v=a7e25bf";
-import * as memory from "./mochi-memory.js?v=a7e25bf";
+import { reply as catReply, GREETING, SUGGESTIONS } from "./cat-brain.js?v=a5440fe";
+import { isMuted, setMuted, meow } from "./cat-sound.js?v=a5440fe";
+import * as memory from "./mochi-memory.js?v=a5440fe";
 
 const root = document.documentElement;
 const body = document.body;
@@ -165,7 +165,7 @@ ui.catOpen = () => !catChat.hidden;
   try {
     const test = document.createElement("canvas");
     if (!(test.getContext("webgl2") || test.getContext("webgl"))) throw new Error("no webgl");
-    const { startScene } = await import("./scene.js?v=a7e25bf");
+    const { startScene } = await import("./scene.js?v=a5440fe");
     scene = startScene(document.getElementById("desk"), ui);
     scene.setNight(isNight());
     onScroll();
