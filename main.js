@@ -94,7 +94,9 @@ async function catAsk(q) {
   typing.remove();
   catMsg(text, "cat");
   if (scene && scene.catTalk) scene.catTalk();
-  window.trackEvent && window.trackEvent(`🐱 Mochi asked about: ${intent}`);
+  window.trackEvent && window.trackEvent(intent === "unknown"
+    ? `🐱 Mochi didn't get: "${q.slice(0, 60)}"`
+    : `🐱 Mochi asked about: ${intent}`);
   catBusy = false;
 }
 function openCat() {
