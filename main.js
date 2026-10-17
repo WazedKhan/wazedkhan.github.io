@@ -1,5 +1,6 @@
 import { reply as catReply, GREETING, SUGGESTIONS } from "./cat-brain.js?v=__BUILD__";
 import { isMuted, setMuted, meow } from "./cat-sound.js?v=__BUILD__";
+import * as memory from "./mochi-memory.js?v=__BUILD__";
 
 const root = document.documentElement;
 const body = document.body;
@@ -45,6 +46,8 @@ const ui = {
     const names = { bowl: "🥣 Fed Mochi", "cat-drag": "🐱 Moved Mochi", cat: "🐱 Mochi the cat (chat opened)", "cat-pet": "🐱 Petted Mochi", duck: "🦆 Rubber duck", mug: "🍵 Tea mug", plant: "🌵 Cactus", money: "🌿 Money plant", lamp: "💡 Lamp (day/night)", monitor: "🖥️ Monitor (jumped to projects)", poster: "🗻 Tokyo poster", window: "🪟 Window" };
     const what = id === "book" ? `📚 Book: ${label}` : names[id] || id;
     window.trackEvent && window.trackEvent(`Desk: ${what}`);
+    const counts = { bowl: "fed", "cat-pet": "pet", "cat-drag": "moved" };
+    if (counts[id]) { memory.count(counts[id]); maybeDropCv(); }
   },
   goto(sel) { document.querySelector(sel).scrollIntoView({ behavior: reduced ? "auto" : "smooth" }); },
 };
@@ -92,18 +95,56 @@ async function catAsk(q) {
     new Promise((r) => setTimeout(r, reduced ? 0 : 450 + Math.random() * 400)),
   ]);
   typing.remove();
-  catMsg(text, "cat");
+  if (intent === "cv") await giveCv(text);
+  else catMsg(text, "cat");
+  memory.count("chats");
   if (scene && scene.catTalk) scene.catTalk();
   window.trackEvent && window.trackEvent(intent === "unknown"
     ? `🐱 Mochi didn't get: "${q.slice(0, 60)}"`
     : `🐱 Mochi asked about: ${intent}`);
   catBusy = false;
+  maybeDropCv();
+}
+
+// ---------- Mochi: CV drop ----------
+async function giveCv(lead) {
+  const p = catMsg(lead, "cat");
+  if (await memory.hasCv()) {
+    const a = document.createElement("a");
+    a.className = "cv-drop";
+    a.href = memory.CV_URL; a.download = "Wazed-Khan-CV.pdf"; a.target = "_blank"; a.rel = "noreferrer";
+    a.textContent = "📄 Wazed's CV (PDF)";
+    a.addEventListener("click", () => window.trackEvent && window.trackEvent("📄 Downloaded the CV"));
+    p.append(document.createElement("br"), a);
+  } else {
+    p.append(" Well, he hasn't left it on the desk yet. Ask him directly: wajed.abdul.khan@gmail.com");
+  }
+  catLog.scrollTop = catLog.scrollHeight;
+  memory.markCv();
+}
+let cvDropping = false;
+function maybeDropCv() {
+  if (cvDropping || !memory.earnedCv()) return;
+  cvDropping = true;
+  window.trackEvent && window.trackEvent("🎁 Earned the CV from Mochi (fed + petted + chatted)");
+  setTimeout(() => {
+    if (scene && scene.catSay) scene.catSay("Wait, I have something for you...", 2600);
+    setTimeout(() => {
+      openCat();
+      giveCv("You fed me, petted me AND talked to me. You've earned this. 🎁");
+    }, 1400);
+  }, catBusy ? 1200 : 400);
 }
 function openCat() {
   if (!catChat.hidden) return;
   catChat.hidden = false;
   requestAnimationFrame(() => catChat.classList.add("on"));
-  if (!catGreeted) { catGreeted = true; catMsg(GREETING, "cat"); catSetChips(SUGGESTIONS); }
+  if (!catGreeted) {
+    catGreeted = true;
+    const back = memory.welcomeBack();
+    catMsg(back ? back.chat + " Ask me anything about Wazed." : GREETING, "cat");
+    catSetChips(SUGGESTIONS);
+  }
   if (window.matchMedia("(pointer: fine)").matches) catInput.focus({ preventScroll: true });
 }
 function closeCat() {
@@ -128,6 +169,11 @@ ui.catOpen = () => !catChat.hidden;
     scene = startScene(document.getElementById("desk"), ui);
     scene.setNight(isNight());
     onScroll();
+    const back = memory.welcomeBack();
+    if (back) {
+      window.trackEvent && window.trackEvent(`🔁 Mochi recognised them (visit #${memory.visit})`);
+      setTimeout(() => { if (window.scrollY < innerHeight * 0.5 && scene.catSay) { scene.catSay(back.bubble); meow(); } }, 2200);
+    }
   } catch (err) {
     console.warn(err);
     body.classList.add("no-webgl");

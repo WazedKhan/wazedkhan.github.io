@@ -941,5 +941,6 @@ export function startScene(canvas, ui) {
     setNight,
     setProgress(v) { progTarget = v; dirty = true; },
     catTalk() { catChatter = 1; catLast = performance.now(); },
+    catSay(text, ms = 4200) { catLast = performance.now(); bubbleAt(catHead, text, ms); dirty = true; },
   };
 }
