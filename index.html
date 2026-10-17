@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" />
-  <link rel="stylesheet" href="styles.css?v=d39df41" />
+  <link rel="stylesheet" href="styles.css?v=a53dfeb" />
 
   <script>
     (function () {
@@ -322,7 +322,7 @@
       </div>
       <h3 class="writing-head">I also write sometimes</h3>
       <ul class="articles">
-        <li><a href="https://medium.com/@wazedkhan111024" target="_blank" rel="noreferrer">Graceful shutdown in Go</a></li>
+        <li><a href="https://wajedkhan.medium.com/how-to-implement-graceful-shutdown-in-a-go-http-server-step-by-step-555329cda4fb" target="_blank" rel="noreferrer">Graceful shutdown in Go</a></li>
         <li><a href="https://medium.com/@wazedkhan111024/solving-a-mystery-using-sql-a-detectives-journey-through-databases-and-clues-e9daf70c2bc1" target="_blank" rel="noreferrer">Solving a mystery using SQL</a></li>
         <li><a href="https://medium.com/@wazedkhan111024/sub-classing-pythons-extending-built-in-immutable-classes-in-python-a06c9ecb759d" target="_blank" rel="noreferrer">Sub-classing Python's immutable built-ins</a></li>
         <li><a href="https://medium.com/@wazedkhan111024/pythons-new-method-crafting-objects-with-precision-862f29af31c8" target="_blank" rel="noreferrer">Python's __new__, explained</a></li>
@@ -342,7 +342,7 @@
         <ul class="contact-links">
           <li><a href="https://www.linkedin.com/in/wajed-khan" target="_blank" rel="noreferrer">LinkedIn</a></li>
           <li><a href="https://github.com/WazedKhan" target="_blank" rel="noreferrer">GitHub</a></li>
-          <li><a href="https://medium.com/@wazedkhan111024" target="_blank" rel="noreferrer">Medium</a></li>
+          <li><a href="https://wajedkhan.medium.com/" target="_blank" rel="noreferrer">Medium</a></li>
           <li><a href="tel:+8801775070922">+880 1775 070922</a></li>
         </ul>
         <footer class="footer">
@@ -359,7 +359,7 @@
   (() => {
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1499617159268274257/XakxDV5u6c6sn3FG7bM6ZilCL42Kj5mao-rtS27cDlaYruLSOh7PGj4aU2817dTHFwdJ";
     const events = [];
-    window.trackEvent = (e) => { if (events.length < 40) events.push(e); };
+    window.trackEvent = (e) => { if (events.length < 80) events.push(e); };
 
     const store = {
       get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
@@ -371,7 +371,9 @@
     const local = ["localhost", "127.0.0.1", ""].includes(location.hostname);
     if (WEBHOOK_URL.startsWith("__") || local || store.get("wk_owner")) return;
 
-    const start = Date.now();
+    // Only count time while the tab is actually visible.
+    let activeMs = 0, activeSince = document.visibilityState === "visible" ? Date.now() : null;
+    const pauseClock = () => { if (activeSince !== null) { activeMs += Date.now() - activeSince; activeSince = null; } };
     const ua = navigator.userAgent;
     const os = /iPhone|iPad|iPod/.test(ua) ? "iOS" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac OS X/.test(ua) ? "macOS" : /CrOS/.test(ua) ? "ChromeOS" : /Linux/.test(ua) ? "Linux" : "Unknown OS";
     const browser = /LinkedInApp/.test(ua) ? "LinkedIn in-app browser" : /FBAN|FBAV/.test(ua) ? "Facebook in-app browser" : /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "Unknown browser";
@@ -441,15 +443,28 @@
       if (c) trackEvent(`📋 Copied: ${c.dataset.copy}`);
     }, true);
 
-    let sent = false;
+    // Sent every time the tab is hidden, not just the first time. The first send creates a
+    // Discord message; later sends edit that same message, so one visit = one live summary.
+    let msgId = null, msgReq = null, lastSig = "", hides = 0;
+    const tidy = (list) => {
+      const out = [];
+      for (const e of list) {
+        const last = out[out.length - 1];
+        if (last && last.e === e) last.n++; else out.push({ e, n: 1 });
+      }
+      return out.map(({ e, n }) => (n > 1 ? `${e} ×${n}` : e)).join("\n");
+    };
     const summary = () => {
-      if (sent) return;
-      const secs = Math.round((Date.now() - start) / 1000);
+      pauseClock();
+      hides++;
+      const secs = Math.round(activeMs / 1000);
       if (secs < 4) return;
-      sent = true;
       const mins = secs >= 60 ? `${Math.floor(secs / 60)}m ${secs % 60}s` : `${secs}s`;
       const order = ["top", "about", "bugs", "projects", "journey", "oss", "contact"];
-      send({
+      const sig = [secs, maxScroll, seen.size, events.length].join("|");
+      if (sig === lastSig) return; // nothing new since the last update
+      lastSig = sig;
+      const embed = {
         title: "📊 Visit summary",
         color: 0xff7f50,
         fields: [
@@ -457,16 +472,31 @@
           { name: "Scrolled", value: `${maxScroll}%`, inline: true },
           { name: "From", value: cut(`${device}, ${browser}`), inline: true },
           { name: "Sections seen", value: cut(order.filter((s) => seen.has(s)).join(", ") || "Only the top"), inline: false },
-          { name: "What they clicked", value: cut(events.length ? events.join("\n") : "Nothing, just looked around"), inline: false },
+          { name: "What they clicked", value: cut(events.length ? tidy(events) : "Nothing, just looked around"), inline: false },
         ],
+        footer: { text: hides > 1 ? `Updated after ${hides} tab switches` : "Left or switched tab" },
         timestamp: new Date().toISOString(),
-      }, true);
+      };
+      const body = JSON.stringify({ username: "Portfolio Visitor Alert", avatar_url: "https://wazedkhan.github.io/assets/wazed.jpg", embeds: [embed] });
+      const headers = { "Content-Type": "application/json" };
+      if (msgId) {
+        fetch(`${WEBHOOK_URL}/messages/${msgId}`, { method: "PATCH", keepalive: true, headers, body }).catch(() => {});
+      } else if (msgReq) {
+        // First send still in flight: edit once we know the message id.
+        msgReq.then((id) => id && fetch(`${WEBHOOK_URL}/messages/${id}`, { method: "PATCH", keepalive: true, headers, body })).catch(() => {});
+      } else {
+        msgReq = fetch(`${WEBHOOK_URL}?wait=true`, { method: "POST", keepalive: true, headers, body })
+          .then((r) => r.json()).then((m) => (msgId = m.id)).catch(() => null);
+      }
     };
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") summary(); });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") summary();
+      else activeSince = Date.now(); // back on the tab: resume the clock
+    });
     addEventListener("pagehide", summary);
   })();
   </script>
 
-  <script type="module" src="main.js?v=d39df41"></script>
+  <script type="module" src="main.js?v=a53dfeb"></script>
 </body>
 </html>
