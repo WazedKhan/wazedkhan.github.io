@@ -34,14 +34,14 @@ const plural = (n, w) => `${n === 1 ? "once" : n === 2 ? "twice" : n + " times"}
 export function welcomeBack() {
   if (visit < 2) return null;
   const days = prevDate ? Math.floor((Date.now() - prevDate) / 864e5) : 0;
-  const when = days === 0 ? "Back already? 😸" : days === 1 ? "You're back! Since yesterday!" : days < 30 ? `You're back! It's been ${days} days.` : "You came back! I almost forgot your smell.";
+  const when = days === 0 ? "Yay, you came back! 😸 I'm so happy to see you again." : days === 1 ? "You're back! 😸 I missed you since yesterday." : days < 30 ? `You're back! 😸 It's been ${days} days and I'm so happy to see you.` : "You came back! 😻 It's been a while, I'm so happy to see you.";
   let did = "";
   if (prev) {
-    if (prev.fed) did = `You fed me ${plural(prev.fed)} last time. I remember. 🐟`;
-    else if (prev.pet) did = `You gave me ${prev.pet === 1 ? "a chin scratch" : prev.pet + " chin scratches"} last time. More please.`;
-    else if (prev.moved) did = `Last time you carried me around ${plural(prev.moved)}. Please don't drop me.`;
-    else if (prev.chats) did = "We chatted last time. I've been thinking about it.";
-    else did = "Last time you didn't even pet me. I noticed.";
+    if (prev.fed) did = `You fed me ${plural(prev.fed)} last time. I still remember. 🐟`;
+    else if (prev.pet) did = `You gave me ${prev.pet === 1 ? "a chin scratch" : prev.pet + " chin scratches"} last time. Purr.`;
+    else if (prev.moved) did = `Last time you carried me around ${plural(prev.moved)}. That was fun.`;
+    else if (prev.chats) did = "I loved our chat last time.";
+    else did = "Maybe this time we can be friends? Chin scratches welcome.";
   }
   return { bubble: when, chat: `${when} ${did}`.trim() };
 }
