@@ -399,3 +399,8 @@ body.no-webgl #desk, body.no-webgl .hero-hint, body.no-webgl .scroll-cue { displ
 body.no-webgl .cat-chat { display: none; }
 @media (max-width: 760px) { .cat-chat { left: 16px; right: 16px; top: 84px; bottom: auto; width: auto; max-height: 52vh; transform-origin: 50% 0; } }
 @media (prefers-reduced-motion: reduce) { .cat-chat { transition: none; } }
+
+.cat-chat-log .msg a.cv-drop { display: inline-block; margin-top: 8px; padding: 7px 13px; border-radius: 999px; background: var(--sunset); color: #1c1a2e; font-weight: 600; text-decoration: none; animation: cv-pop .5s cubic-bezier(.3,1.6,.5,1) both; }
+.cat-chat-log .msg a.cv-drop:hover { filter: brightness(1.05); }
+@keyframes cv-pop { from { transform: scale(.6) rotate(-6deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .cat-chat-log .msg a.cv-drop { animation: none; } }

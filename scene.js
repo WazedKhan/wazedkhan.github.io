@@ -1,7 +1,7 @@
 // Wazed's desk in Dhaka, as a little Three.js diorama.
 // Drag to look around, click objects, scroll to fly into the monitor.
 import * as THREE from "three";
-import { purr, meow, walking as walkSound, eating as eatSound } from "./cat-sound.js?v=a53dfeb";
+import { purr, meow, walking as walkSound, eating as eatSound } from "./cat-sound.js?v=c4428c7";
 
 const CODE = `package main
 
@@ -941,5 +941,6 @@ export function startScene(canvas, ui) {
     setNight,
     setProgress(v) { progTarget = v; dirty = true; },
     catTalk() { catChatter = 1; catLast = performance.now(); },
+    catSay(text, ms = 4200) { catLast = performance.now(); bubbleAt(catHead, text, ms); dirty = true; },
   };
 }

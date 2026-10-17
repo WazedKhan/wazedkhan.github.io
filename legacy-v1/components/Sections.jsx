@@ -44,7 +44,7 @@ function About() {
           </div>
           <div className="about-meta">
             <div className="label">Availability</div>
-            <div style={{ color: "var(--accent)", fontWeight: 500 }}>Open to relocation · Remote · Available immediately</div>
+            <div style={{ color: "var(--accent)", fontWeight: 500 }}>Open to roles in Bangladesh · Relocation · Remote · 30-day notice period</div>
           </div>
           <div className="about-meta">
             <div className="label">Employer</div>
@@ -639,7 +639,7 @@ function Contact() {
       </h2>
 
       <div style={{ marginBottom: "12px" }} className="mono dim">
-        Open to relocation · Remote · Available immediately for interviews
+        Open to roles in Bangladesh, relocation or remote · Available for interviews now · 30-day notice period
       </div>
 
       <div className="contact-grid stagger-children">
@@ -666,7 +666,7 @@ function Contact() {
         <div className="contact-card contact-card-static scale-in">
           <div className="label">Location</div>
           <div className="contact-val" style={{ fontSize: "22px" }}>Dhaka, Bangladesh</div>
-          <div className="mono dim" style={{ fontSize: "11px" }}>Open to global relocation</div>
+          <div className="mono dim" style={{ fontSize: "11px" }}>Open to Bangladesh, remote or relocation</div>
         </div>
       </div>
 

@@ -35,7 +35,7 @@ function Hero() {
         <span className="hero-status-sep">/</span>
         <span>DHAKA, BD · UTC+6</span>
         <span className="hero-status-sep">/</span>
-        <span style={{ color: "var(--accent)" }}>OPEN TO RELOCATION · REMOTE</span>
+        <span style={{ color: "var(--accent)" }}>OPEN TO BANGLADESH · RELOCATION · REMOTE</span>
       </div>
 
       <h1 className="hero-title">
