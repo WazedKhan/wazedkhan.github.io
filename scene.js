@@ -370,18 +370,37 @@ export function startScene(canvas, ui) {
   });
   tag(money, "money", "My money plant");
 
-  // ---- Lamp ----
+  // ---- Lamp (architect style: base, two arms on joints, shade) ----
   const lamp = new THREE.Group(); room.add(lamp);
   lamp.position.set(0.65, 2.58, -4.45);
   cyl(0.26, 0.28, 0.07, PALETTE.lamp, 0, 0.035, 0, lamp);
-  const arm1 = box(0.06, 1.1, 0.06, PALETTE.lamp, 0, 0.55, 0, lamp); arm1.rotation.z = 0.25;
-  const arm2 = box(0.06, 0.8, 0.06, PALETTE.lamp, -0.32, 1.25, 0, lamp); arm2.rotation.z = -1.0;
-  const head = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.35, 16, 1, true), mat(PALETTE.lamp, { side: THREE.DoubleSide }));
-  head.position.set(-0.68, 1.35, 0); head.rotation.z = 0.6; head.castShadow = true; lamp.add(head);
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), new THREE.MeshBasicMaterial({ color: 0xfff1c4 }));
-  bulb.position.set(-0.72, 1.28, 0); lamp.add(bulb);
+  const lampMat = mat(PALETTE.lamp, { flatShading: false, roughness: 0.45, metalness: 0.35 });
+  const up = new THREE.Vector3(0, 1, 0);
+  const lampPart = (geo, p, m = lampMat) => { const o = new THREE.Mesh(geo, m); o.position.copy(p); o.castShadow = true; lamp.add(o); return o; };
+  const rod = (a, b) => {
+    const d = b.clone().sub(a);
+    const o = lampPart(new THREE.CylinderGeometry(0.028, 0.028, d.length(), 10), a.clone().addScaledVector(d, 0.5));
+    o.quaternion.setFromUnitVectors(up, d.normalize());
+  };
+  const J0 = new THREE.Vector3(0, 0.09, 0), J1 = new THREE.Vector3(0.2, 1.0, 0), J2 = new THREE.Vector3(-0.5, 1.48, 0);
+  lampPart(new THREE.SphereGeometry(0.055, 12, 8), J0); rod(J0, J1);
+  lampPart(new THREE.SphereGeometry(0.05, 12, 8), J1); rod(J1, J2);
+  lampPart(new THREE.SphereGeometry(0.05, 12, 8), J2);
+  // the shade hangs from the top joint and points down at the desk
+  const shade = new THREE.Group(); shade.position.copy(J2); lamp.add(shade);
+  shade.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), new THREE.Vector3(-0.3, -0.8, 0.52).normalize());
+  const shadeGeo = new THREE.ConeGeometry(0.21, 0.3, 20, 1, true);
+  const shadeOut = new THREE.Mesh(shadeGeo, mat(PALETTE.lamp, { flatShading: false, roughness: 0.45, metalness: 0.35, side: THREE.FrontSide }));
+  shadeOut.position.y = -0.2; shadeOut.castShadow = true; shade.add(shadeOut);
+  const shadeIn = new THREE.Mesh(shadeGeo, new THREE.MeshBasicMaterial({ color: 0x8a8399, side: THREE.BackSide }));
+  shadeIn.position.y = -0.2; shadeIn.scale.setScalar(0.97); shade.add(shadeIn);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.09, 12), lampMat); cap.position.y = -0.04; cap.castShadow = true; shade.add(cap);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 10), new THREE.MeshBasicMaterial({ color: 0xd9d4e6 }));
+  bulb.position.y = -0.27; shade.add(bulb);
   const lampLight = new THREE.PointLight(0xffc979, 0, 7, 1.6);
-  lampLight.position.set(-0.75, 1.15, 0.1); lampLight.castShadow = true; lampLight.shadow.mapSize.set(512, 512); lamp.add(lampLight);
+  lampLight.position.y = -0.36; lampLight.castShadow = true; lampLight.shadow.mapSize.set(512, 512);
+  lampLight.shadow.needsUpdate = true; // its shadow only re-renders while the lamp is on (see frame())
+  shade.add(lampLight);
   tag(lamp, "lamp", "Click to switch day and night");
 
   // ---- Rubber duck (senior debugging consultant) ----
@@ -394,45 +413,64 @@ export function startScene(canvas, ui) {
   tag(duck, "duck", "Senior debugging consultant");
 
   // ---- Mochi, the desk cat (click to chat, stroke to pet) ----
-  const CATC = { fur: 0xf0a05a, dark: 0xc9743a, cream: 0xfbe9d0, pink: 0xff9aa8 };
+  // Smooth-shaded so she reads as soft and plushy against the low-poly room.
+  // Tiny face details don't cast shadows, which keeps the shadow pass cheap.
+  const CATC = { fur: 0xf2a65e, dark: 0xcf7a3c, cream: 0xfff1de, pink: 0xff9aa8, blush: 0xffb3ae };
   const cat = new THREE.Group(); room.add(cat);
   cat.position.set(1.55, 3.425, -4.68); cat.rotation.y = 0.85; cat.scale.setScalar(1.15);
-  const furMat = mat(CATC.fur), darkMat = mat(CATC.dark), creamMat = mat(CATC.cream), pinkMat = mat(CATC.pink);
-  const part = (geo, m, x, y, z, parent) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; parent.add(o); return o; };
+  const soft = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0 });
+  const furMat = soft(CATC.fur), darkMat = soft(CATC.dark), creamMat = soft(CATC.cream), pinkMat = soft(CATC.pink), blushMat = soft(CATC.blush);
+  const part = (geo, m, x, y, z, parent, shadow = true) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = shadow; o.receiveShadow = shadow; parent.add(o); return o; };
+  const ball = (r, w = 20, h = 14) => new THREE.SphereGeometry(r, w, h);
   const catBody = new THREE.Group(); cat.add(catBody);
-  const torso = part(new THREE.SphereGeometry(0.3, 16, 12), furMat, 0, 0.21, 0, catBody); torso.scale.set(0.95, 0.7, 1.35);
-  const belly = part(new THREE.SphereGeometry(0.2, 12, 10), creamMat, 0, 0.16, 0.2, catBody); belly.scale.set(1.05, 0.8, 0.9);
-  [-0.2, -0.07, 0.06].forEach((z) => { // stripes over the back
-    const k = Math.sqrt(1 - (z / 0.405) ** 2) * 1.03;
-    const s = part(new THREE.TorusGeometry(1, 0.075, 5, 16, Math.PI), darkMat, 0, 0.21, z, catBody);
-    s.scale.set(0.285 * k, 0.21 * k, 0.25);
+  const torso = part(ball(0.3, 24, 16), furMat, 0, 0.21, 0, catBody); torso.scale.set(0.95, 0.7, 1.35);
+  const belly = part(ball(0.2), creamMat, 0, 0.16, 0.2, catBody); belly.scale.set(1.05, 0.8, 0.9);
+  part(ball(0.16), creamMat, 0, 0.29, 0.29, catBody).scale.set(0.95, 0.85, 0.6); // fluffy chest
+  // tabby stripes: short arcs across the top of the back only
+  [-0.24, -0.11, 0.02].forEach((z) => {
+    const k = Math.sqrt(1 - (z / 0.405) ** 2) * 1.01, arc = Math.PI * 0.6;
+    const st = part(new THREE.TorusGeometry(1, 0.06, 6, 20, arc), darkMat, 0, 0.21, z, catBody, false);
+    st.rotation.z = Math.PI / 2 - arc / 2;
+    st.scale.set(0.285 * k, 0.21 * k, 0.22);
   });
   const catHead = new THREE.Group(); catHead.position.set(0, 0.43, 0.32); catBody.add(catHead);
-  const skull = part(new THREE.SphereGeometry(0.2, 16, 12), furMat, 0, 0, 0, catHead); skull.scale.set(1.12, 0.95, 0.95);
-  part(new THREE.BoxGeometry(0.03, 0.07, 0.02), darkMat, 0, 0.13, 0.12, catHead).rotation.x = -0.5;
+  const skull = part(ball(0.2, 28, 20), furMat, 0, 0, 0, catHead); skull.scale.set(1.15, 0.95, 0.97);
+  [-1, 1].forEach((s) => part(ball(0.1), furMat, s * 0.14, -0.065, 0.04, catHead).scale.set(1, 0.78, 0.95)); // round cheeks
+  // forehead "M" marking
+  [[0, 0.165, 0.09, 0], [-0.045, 0.158, 0.1, 0.25], [0.045, 0.158, 0.1, -0.25]].forEach(([x, y, z, rz]) => {
+    const m = part(ball(0.035, 10, 8), darkMat, x, y, z, catHead, false); m.scale.set(0.32, 1, 0.45); m.rotation.set(-0.75, 0, rz);
+  });
   const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1c1a2e });
   const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  const whiskerMat = new THREE.MeshBasicMaterial({ color: 0xfff8ee });
+  const whiskerMat = new THREE.MeshBasicMaterial({ color: 0xfffaf2 });
+  const mouthMat = new THREE.MeshBasicMaterial({ color: 0x5a3a33 });
   const eyes = [];
   [-1, 1].forEach((s) => {
-    const ear = part(new THREE.ConeGeometry(0.08, 0.17, 4), furMat, s * 0.12, 0.17, -0.02, catHead); ear.rotation.set(-0.1, Math.PI / 4, -s * 0.35);
-    const inner = part(new THREE.ConeGeometry(0.045, 0.1, 3), pinkMat, s * 0.118, 0.155, 0.015, catHead); inner.rotation.set(-0.1, 0, -s * 0.35);
-    const eye = new THREE.Group(); eye.position.set(s * 0.078, 0.03, 0.172); catHead.add(eye);
-    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.036, 12, 8), eyeMat); ball.scale.z = 0.6; eye.add(ball);
-    const glint = new THREE.Mesh(new THREE.SphereGeometry(0.011, 6, 4), glintMat); glint.position.set(0.012, 0.014, 0.02); eye.add(glint);
+    const ear = new THREE.Group(); ear.position.set(s * 0.125, 0.15, -0.01); ear.rotation.set(-0.12, 0, -s * 0.32); catHead.add(ear);
+    part(new THREE.ConeGeometry(0.085, 0.17, 14), furMat, 0, 0.06, 0, ear).scale.z = 0.55;
+    part(new THREE.ConeGeometry(0.055, 0.12, 12), pinkMat, 0, 0.05, 0.022, ear, false).scale.z = 0.3;
+    const eye = new THREE.Group(); eye.position.set(s * 0.085, 0.012, 0.168); catHead.add(eye);
+    const iris = new THREE.Mesh(ball(0.048, 16, 12), eyeMat); iris.scale.set(1, 1.08, 0.55); eye.add(iris);
+    const g1 = new THREE.Mesh(ball(0.015, 8, 6), glintMat); g1.position.set(0.016, 0.02, 0.024); eye.add(g1);
+    const g2 = new THREE.Mesh(ball(0.0075, 6, 4), glintMat); g2.position.set(-0.014, -0.016, 0.025); eye.add(g2);
     eyes.push(eye);
-    part(new THREE.SphereGeometry(0.05, 10, 8), creamMat, s * 0.035, -0.065, 0.16, catHead);
-    for (let j = 0; j < 2; j++) {
-      const wk = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.006, 0.006), whiskerMat);
-      wk.position.set(s * 0.14, -0.055 + j * 0.03, 0.15); wk.rotation.set(0, -s * 0.35, s * (j - 0.5) * 0.3); catHead.add(wk);
+    part(ball(0.036, 12, 8), blushMat, s * 0.125, -0.05, 0.15, catHead, false).scale.set(1, 0.6, 0.35);
+    part(ball(0.048, 16, 12), creamMat, s * 0.036, -0.072, 0.165, catHead, false); // muzzle puffs
+    const smile = part(new THREE.TorusGeometry(0.019, 0.0045, 4, 10, Math.PI), mouthMat, s * 0.019, -0.068, 0.211, catHead, false);
+    smile.rotation.z = Math.PI; // a little "w" mouth
+    for (let j = 0; j < 3; j++) {
+      const wk = new THREE.Mesh(new THREE.CylinderGeometry(0.0025, 0.0025, 0.2, 4), whiskerMat);
+      wk.position.set(s * 0.16, -0.06 + j * 0.022, 0.15); wk.rotation.set(0, -s * 0.3, Math.PI / 2 + s * (j - 1) * 0.18); catHead.add(wk);
     }
   });
-  const nose = part(new THREE.SphereGeometry(0.02, 8, 6), pinkMat, 0, -0.03, 0.2, catHead); nose.scale.set(1.3, 0.8, 0.8);
-  const paws = [-1, 1].map((s) => { const p = part(new THREE.SphereGeometry(0.065, 10, 8), creamMat, s * 0.11, 0.04, 0.42, catBody); p.scale.set(1, 0.6, 1.3); return p; });
+  part(ball(0.03, 10, 8), creamMat, 0, -0.105, 0.15, catHead, false); // chin
+  const nose = part(new THREE.ConeGeometry(0.022, 0.024, 3), pinkMat, 0, -0.036, 0.205, catHead, false);
+  nose.rotation.set(Math.PI / 2 - 0.25, 0, Math.PI); nose.scale.set(1.3, 1, 0.8);
+  const paws = [-1, 1].map((s) => { const p = part(ball(0.065, 14, 10), creamMat, s * 0.11, 0.04, 0.42, catBody); p.scale.set(1, 0.6, 1.3); return p; });
   const pawR = paws[1];
   const legs = [[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([sx, sz]) => {
     const hip = new THREE.Group(); hip.position.set(sx * 0.13, 0.12, sz * 0.24); catBody.add(hip);
-    const leg = part(new THREE.CapsuleGeometry(0.045, 0.2, 4, 8), sz > 0 ? creamMat : furMat, 0, -0.15, 0, hip);
+    part(new THREE.CapsuleGeometry(0.045, 0.2, 4, 10), sz > 0 ? creamMat : furMat, 0, -0.15, 0, hip);
     hip.scale.y = 0.02; hip.userData = { front: sz > 0, phase: (sx * sz > 0) ? 0 : Math.PI };
     return hip;
   });
@@ -440,7 +478,7 @@ export function startScene(canvas, ui) {
   let tailParent = new THREE.Group(); tailParent.position.set(0.1, 0.1, -0.36); catBody.add(tailParent);
   for (let i = 0; i < 7; i++) {
     const j = new THREE.Group(); if (i > 0) j.position.z = -0.085; tailParent.add(j);
-    const seg = part(new THREE.CapsuleGeometry(0.05 - i * 0.003, 0.05, 4, 8), i >= 5 ? darkMat : furMat, 0, 0, -0.0425, j);
+    const seg = part(new THREE.CapsuleGeometry(0.052 - i * 0.003, 0.05, 4, 10), i >= 5 ? darkMat : furMat, 0, 0, -0.0425, j);
     seg.rotation.x = Math.PI / 2;
     j.userData.base = i === 0 ? 0.9 : 0.38;
     j.rotation.x = i === 0 ? -0.3 : i >= 5 ? 0.25 : 0.02;
@@ -611,6 +649,7 @@ export function startScene(canvas, ui) {
     sun.color.set(n ? 0x9fb0ff : 0xffd8b0);
     const { ctx, canvas: c } = skyTex.userData; drawSky(ctx, c.width, c.height, n); skyTex.needsUpdate = true;
     bulb.material.color.set(n ? 0xfff1c4 : 0xd9d4e6);
+    shadeIn.material.color.set(n ? 0xffe7b8 : 0x8a8399);
     eyeMat.color.set(n ? 0xc8f26a : 0x1c1a2e);
     if (reduced || firstTheme) Object.assign(light, target);
     firstTheme = false;
@@ -767,7 +806,7 @@ export function startScene(canvas, ui) {
     rot += (rotTarget - rot) * k2;
     tilt += (tiltTarget - tilt) * k2;
     for (const key in light) light[key] += (target[key] - light[key]) * (reduced ? 1 : k2);
-    hemi.intensity = light.hemi; sun.intensity = light.sun; lampLight.intensity = light.lamp; screenGlow.intensity = light.glow;
+    hemi.intensity = light.hemi; sun.intensity = light.sun; lampLight.intensity = light.lamp; lampLight.shadow.autoUpdate = light.lamp > 0.02; screenGlow.intensity = light.glow;
 
     const p = ease(Math.min(1, progress));
     room.rotation.y = rot * (1 - p);
